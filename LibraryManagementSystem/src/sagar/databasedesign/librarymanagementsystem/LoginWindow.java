@@ -7,12 +7,17 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.SwingConstants;
 import java.awt.Font;
-import java.awt.Component;
 import javax.swing.JTextField;
 import java.awt.Color;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.JPasswordField;
+import java.awt.CardLayout;
+import javax.swing.JPanel;
+import javax.swing.JMenuBar;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 
 /**
  * Login window for the Library Management system
@@ -22,11 +27,13 @@ import java.awt.event.ActionEvent;
  */
 public class LoginWindow {
 
-	private JFrame frmLibraryManagementSystem;
+	private JFrame frmLogin;
+
 	private JTextField textFieldUsername;
-	private JTextField textFieldPassword;
-	private JLabel lblError;
-	
+	private JPasswordField passwordField;
+	private JPanel panelLogin;
+	private JPanel panelLMS;
+
 	/**
 	 * Launch the application.
 	 */
@@ -35,7 +42,7 @@ public class LoginWindow {
 			public void run() {
 				try {
 					LoginWindow window = new LoginWindow();
-					window.frmLibraryManagementSystem.setVisible(true);
+					window.frmLogin.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -54,69 +61,109 @@ public class LoginWindow {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		frmLibraryManagementSystem = new JFrame();
-		frmLibraryManagementSystem.getContentPane().setBackground(Color.ORANGE);
-		frmLibraryManagementSystem.setResizable(false);
-		frmLibraryManagementSystem.getContentPane().setFont(
+		frmLogin = new JFrame();
+		frmLogin.getContentPane().setBackground(Color.ORANGE);
+		frmLogin.setResizable(false);
+		frmLogin.getContentPane().setFont(
 				new Font("Segoe UI Black", Font.PLAIN, 24));
-		frmLibraryManagementSystem.setTitle("Library Management System");
-		frmLibraryManagementSystem.setBounds(100, 100, 583, 412);
-		frmLibraryManagementSystem
-				.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-		JLabel lblTitle = new JLabel("LOGIN");
-		lblTitle.setForeground(Color.GREEN);
-		lblTitle.setBounds(214, 32, 146, 55);
-		lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblTitle.setAlignmentY(Component.TOP_ALIGNMENT);
-		lblTitle.setFont(new Font("Segoe UI Black", Font.BOLD, 40));
-		lblTitle.setVerticalAlignment(SwingConstants.TOP);
-		lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-
-		JLabel lblUsername = new JLabel("Username");
-		lblUsername.setToolTipText("Enter Username in the text");
-		lblUsername.setHorizontalAlignment(SwingConstants.CENTER);
-		lblUsername.setFont(new Font("Segoe UI Black", Font.PLAIN, 24));
-		lblUsername.setBounds(133, 113, 128, 33);
-		frmLibraryManagementSystem.getContentPane().setLayout(null);
-		frmLibraryManagementSystem.getContentPane().add(lblTitle);
-		frmLibraryManagementSystem.getContentPane().add(lblUsername);
-
+		frmLogin.setTitle("Library Management System");
+		frmLogin.setBounds(100, 100, 1269, 701);
+		frmLogin.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frmLogin.getContentPane().setLayout(new CardLayout(0, 0));
+		
+		panelLogin = new JPanel();
+		panelLogin.setBackground(new Color(255, 165, 0));
+		frmLogin.getContentPane().add(panelLogin, "name_611262067352413");
+		panelLogin.setLayout(null);
+		
+		JLabel labelTitle = new JLabel("LOGIN");
+		labelTitle.setVerticalAlignment(SwingConstants.TOP);
+		labelTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		labelTitle.setForeground(Color.GREEN);
+		labelTitle.setFont(new Font("Segoe UI Black", Font.BOLD, 40));
+		labelTitle.setAlignmentY(0.0f);
+		labelTitle.setAlignmentX(0.5f);
+		labelTitle.setBounds(528, 76, 289, 49);
+		panelLogin.add(labelTitle);
+		
+		JLabel labelUsername = new JLabel("Username");
+		labelUsername.setToolTipText("Enter Username in the text");
+		labelUsername.setHorizontalAlignment(SwingConstants.CENTER);
+		labelUsername.setFont(new Font("Segoe UI Black", Font.PLAIN, 24));
+		labelUsername.setBounds(424, 189, 199, 57);
+		panelLogin.add(labelUsername);
+		
 		textFieldUsername = new JTextField();
+		textFieldUsername.setFont(new Font("Segoe UI", Font.PLAIN, 24));
 		textFieldUsername.setToolTipText("utd");
-		textFieldUsername.setBounds(301, 120, 146, 26);
-		frmLibraryManagementSystem.getContentPane().add(textFieldUsername);
 		textFieldUsername.setColumns(10);
-
-		JLabel lblPassword = new JLabel("Password");
-		lblPassword.setToolTipText("Enter Password in the text");
-		lblPassword.setHorizontalAlignment(SwingConstants.CENTER);
-		lblPassword.setFont(new Font("Segoe UI Black", Font.PLAIN, 24));
-		lblPassword.setBounds(133, 182, 128, 33);
-		frmLibraryManagementSystem.getContentPane().add(lblPassword);
-
-		textFieldPassword = new JTextField();
-		textFieldPassword.setToolTipText("utd");
-		textFieldPassword.setColumns(10);
-		textFieldPassword.setBounds(301, 189, 146, 26);
-		frmLibraryManagementSystem.getContentPane().add(textFieldPassword);
-
-		JButton btnLogin =  new JButton("Login");
-		btnLogin.addActionListener(new ActionListener() {
+		textFieldUsername.setBounds(749, 190, 274, 56);
+		panelLogin.add(textFieldUsername);
+		
+		JLabel labelPassword = new JLabel("Password");
+		labelPassword.setToolTipText("Enter Password in the text");
+		labelPassword.setHorizontalAlignment(SwingConstants.CENTER);
+		labelPassword.setFont(new Font("Segoe UI Black", Font.PLAIN, 24));
+		labelPassword.setBounds(424, 307, 199, 65);
+		panelLogin.add(labelPassword);
+		
+		JButton buttonLogin = new JButton("Login");
+		buttonLogin.setFont(new Font("Segoe UI Black", Font.PLAIN, 22));
+		buttonLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(textFieldUsername.getText().toString().isEmpty() || textFieldPassword.getText().toString().isEmpty())
-					JOptionPane.showMessageDialog(frmLibraryManagementSystem, "Please enter both username and password");
-				else
-					JOptionPane.showMessageDialog(frmLibraryManagementSystem, "Press OK to log you in");
+				if(textFieldUsername.getText().equals("") || passwordField.getPassword().length <= 0)
+					JOptionPane.showMessageDialog(frmLogin, "Please enter both username and password");
+				else {
+					if(new User(textFieldUsername.getText(), passwordField.getPassword()).authenticate()) {
+						panelLMS.setVisible(true);
+						panelLogin.setVisible(false);
+					} else {
+						JOptionPane.showMessageDialog(frmLogin, "Username and Password do not match");
+					}
+				}
 			}
 		});
-
-		btnLogin.setToolTipText("Click to log in");
-		btnLogin.setBounds(214, 269, 146, 29);
-		frmLibraryManagementSystem.getContentPane().add(btnLogin);
+		buttonLogin.setToolTipText("Click to log in");
+		buttonLogin.setBounds(528, 451, 289, 49);
+		panelLogin.add(buttonLogin);
 		
-		lblError = new JLabel();
-		lblError.setBounds(133, 320, 314, 29);
-		frmLibraryManagementSystem.getContentPane().add(lblError);
+		passwordField = new JPasswordField();
+		passwordField.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+		passwordField.setBounds(749, 315, 274, 57);
+		panelLogin.add(passwordField);
+		
+		panelLMS = new JPanel();
+		panelLMS.setBackground(new Color(255, 165, 0));
+		frmLogin.getContentPane().add(panelLMS, "name_611365057672554");
+		panelLMS.setLayout(null);
+		
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+		menuBar.setBounds(0, 0, 1263, 31);
+		panelLMS.add(menuBar);
+		
+		JMenu mnLibrary = new JMenu("Library");
+		mnLibrary.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+		menuBar.add(mnLibrary);
+		
+		JMenuItem mntmSearch = new JMenuItem("Search");
+		mntmSearch.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+		mnLibrary.add(mntmSearch);
+		
+		JMenuItem mntmInitialize = new JMenuItem("Initialize");
+		mntmInitialize.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+		mnLibrary.add(mntmInitialize);
+		
+		JMenu mnHelp = new JMenu("Help");
+		mnHelp.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+		menuBar.add(mnHelp);
+		
+		JMenuItem mntmUserManual = new JMenuItem("User Manual");
+		mntmUserManual.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+		mnHelp.add(mntmUserManual);
+		
+		JMenuItem mntmAbout = new JMenuItem("About");
+		mntmAbout.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+		mnHelp.add(mntmAbout);
 	}
 }
