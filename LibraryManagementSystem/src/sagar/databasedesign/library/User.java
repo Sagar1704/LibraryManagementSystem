@@ -1,4 +1,4 @@
-package sagar.databasedesign.librarymanagementsystem;
+package sagar.databasedesign.library;
 
 import java.net.PasswordAuthentication;
 

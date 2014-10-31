@@ -1,46 +1,44 @@
 package sagar.databasedesign.library;
 
+import sagar.databasedesign.enums.Role;
+
 public class Author {
-	private Book book;
-	private String firstName;
-	private String middleInitial;
-	private String lastName;
-	
-	public Author(Book book, String firstName, String middleInitial,
-			String lastName) {
+	private String name;
+	private int type;
+	private Role role;
+
+	public Author(String name, int type, Role role) {
 		super();
-		this.book = book;
-		this.firstName = firstName;
-		this.middleInitial = middleInitial;
-		this.lastName = lastName;
+		this.name = name;
+		this.type = type;
+		this.role = role;
 	}
-	
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
 	public Author() {
 	}
-	
-	public Book getBook() {
-		return book;
+
+	public Role getRole() {
+		return role;
 	}
-	public void setBook(Book book) {
-		this.book = book;
+
+	public void setRole(Role role) {
+		this.role = role;
 	}
-	public String getFirstName() {
-		return firstName;
-	}
-	public void setFirstName(String firstName) {
-		this.firstName = firstName;
-	}
-	public String getMiddleInitial() {
-		return middleInitial;
-	}
-	public void setMiddleInitial(String middleInitial) {
-		this.middleInitial = middleInitial;
-	}
-	public String getLastName() {
-		return lastName;
-	}
-	public void setLastName(String lastName) {
-		this.lastName = lastName;
-	}
-	
+
 }

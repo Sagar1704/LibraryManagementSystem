@@ -1,37 +1,44 @@
 package sagar.databasedesign.library;
 
-import java.util.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
 
 public class Loan {
-	private String id;
 	private Book book;
 	private Branch branch;
 	private Borrower borrower;
-	private Date dateOut;
-	private Date dateIn;
-	private Date dueDate;
-	
-	public Loan(String id, Book book, Branch branch, Borrower borrower,
-			Date dateOut, Date dateIn, Date dueDate) {
+	private Calendar dateOut = Calendar.getInstance();;
+	private Calendar dueDate = Calendar.getInstance();;
+	private Calendar dateIn = Calendar.getInstance();;
+
+	private static final String DATE_PATTERN = "YYYY-MM-DD";
+
+	private static final SimpleDateFormat SDF = new SimpleDateFormat(
+			DATE_PATTERN, Locale.US);
+
+	public Loan(Book book, Branch branch, Borrower borrower, String dateOut,
+			String dueDate, String dateIn) {
 		super();
-		this.id = id;
 		this.book = book;
 		this.branch = branch;
 		this.borrower = borrower;
-		this.dateOut = dateOut;
-		this.dateIn = dateIn;
-		this.dueDate = dueDate;
+		try {
+			this.dateOut.setTime(SDF.parse(dateOut));
+
+			this.dueDate.setTime(SDF.parse(dueDate));
+			if (dateIn == null)
+				this.dateIn = null;
+			else
+				this.dateIn.setTime(SDF.parse(dateIn));
+
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
 	}
-	
+
 	public Loan() {
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
 	}
 
 	public Book getBook() {
@@ -58,28 +65,28 @@ public class Loan {
 		this.borrower = borrower;
 	}
 
-	public Date getDateOut() {
+	public Calendar getDateOut() {
 		return dateOut;
 	}
 
-	public void setDateOut(Date dateOut) {
+	public void setDateOut(Calendar dateOut) {
 		this.dateOut = dateOut;
 	}
 
-	public Date getDateIn() {
-		return dateIn;
-	}
-
-	public void setDateIn(Date dateIn) {
-		this.dateIn = dateIn;
-	}
-
-	public Date getDueDate() {
+	public Calendar getDueDate() {
 		return dueDate;
 	}
 
-	public void setDueDate(Date dueDate) {
+	public void setDueDate(Calendar dueDate) {
 		this.dueDate = dueDate;
+	}
+
+	public Calendar getDateIn() {
+		return dateIn;
+	}
+
+	public void setDateIn(Calendar dateIn) {
+		this.dateIn = dateIn;
 	}
 
 }
