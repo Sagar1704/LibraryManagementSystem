@@ -52,7 +52,7 @@ public final class DatabaseManager {
 	private static final String ISBN = "isbn";
 	private static final String TITLE = "title";
 	private static final String INSERT_BOOK = "INSERT INTO " + SCHEMA + "."
-			+ BOOK + " VALUES('?', '?');";
+			+ BOOK + " VALUES(?, ?);";
 	private static final String SELECT_BOOK = "SELECT " + ISBN + "," + TITLE
 			+ " FROM " + SCHEMA + "." + BOOK + ";";
 
@@ -61,41 +61,45 @@ public final class DatabaseManager {
 	private static final String TYPE = "type";
 	private static final String ROLE = "role";
 	private static final String INSERT_AUTHOR = "INSERT INTO " + SCHEMA + "."
-			+ AUTHOR + " VALUES('?', '?', ?, '?');";
+			+ AUTHOR + " VALUES(?, ?, ?, ?);";
 
 	private static final String BRANCH = "branch";
-	private static final String BRANCH_ID = "id";
+	private static final String BRANCH_ID = "branch_id";
 	private static final String BRANCH_NAME = "branch_name";
 	private static final String ADDRESS = "address";
 	private static final String INSERT_BRANCH = "INSERT INTO " + SCHEMA + "."
-			+ BRANCH + " VALUES(?, '?', '?');";
+			+ BRANCH + " VALUES(?, ?, ?);";
 
 	private static final String BOOK_COPIES = "book_copies";
 	private static final String COPIES = "num_of_copies";
 	private static final String INSERT_COPIES = "INSERT INTO " + SCHEMA + "."
-			+ BOOK_COPIES + " VALUES('?', ?, ?);";
+			+ BOOK_COPIES + " VALUES(?, ?, ?);";
 
 	private static final String BORROWER = "borrower";
 	private static final String CARD_NO = "card_no";
 	private static final String FNAME = "fname";
 	private static final String LNAME = "lname";
+	private static final String CITY = "city";
+	private static final String STATE = "state";
 	private static final String PHONE = "phone";
 	private static final String INSERT_BORROWER = "INSERT INTO " + SCHEMA + "."
-			+ BORROWER + " VALUES('?', '?', '?', '?', '?');";
+			+ BORROWER + " VALUES(?, ?, ?, ?, ?, ?, ?);";
 
 	private static final String BOOK_LOANS = "book_loans";
 	private static final String DATE_OUT = "date_out";
 	private static final String DUE_DATE = "due_date";
 	private static final String DATE_IN = "date_in";
 	private static final String INSERT_LOANS = "INSERT INTO " + SCHEMA + "."
-			+ BOOK_LOANS + " VALUES('?', ?, '?', '?', '?', '?');";
+			+ BOOK_LOANS + "(" + ISBN + ", " + BRANCH_ID + ", " + CARD_NO
+			+ ", " + DATE_OUT + ", " + DUE_DATE + ", " + DATE_IN
+			+ ") VALUES(?, ?, ?, ?, ?, ?);";
 
 	private static final String FINES = "FINES";
 	private static final String LOAN_ID = "loan_id";
 	private static final String FINE_AMT = "fine_amt";
 	private static final String PAID = "paid";
 	private static final String INSERT_FINES = "INSERT INTO " + SCHEMA + "."
-			+ FINES + " VALUES('?', ?, ?);";
+			+ FINES + " VALUES(?, ?, ?);";
 
 	private DatabaseManager() {
 		try {
@@ -177,8 +181,8 @@ public final class DatabaseManager {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_BOOK);
-			statement.setString(0, book.getId());
-			statement.setString(1, book.getTitle());
+			statement.setString(1, book.getId());
+			statement.setString(2, book.getTitle());
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -196,10 +200,10 @@ public final class DatabaseManager {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_AUTHOR);
-			statement.setString(0, book.getId());
-			statement.setString(1, author.getName());
-			statement.setInt(2, author.getType());
-			statement.setString(3, author.getRole().getRole());
+			statement.setString(1, book.getId());
+			statement.setString(2, author.getName());
+			statement.setInt(3, author.getType());
+			statement.setString(4, author.getRole().getRole());
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -217,9 +221,9 @@ public final class DatabaseManager {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_BRANCH);
-			statement.setInt(0, branch.getId());
-			statement.setString(1, branch.getName());
-			statement.setString(2, branch.getAddress());
+			statement.setInt(1, branch.getId());
+			statement.setString(2, branch.getName());
+			statement.setString(3, branch.getAddress());
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -237,9 +241,9 @@ public final class DatabaseManager {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_COPIES);
-			statement.setString(0, book.getId());
-			statement.setInt(1, branch.getId());
-			statement.setInt(2, copies);
+			statement.setString(1, book.getId());
+			statement.setInt(2, branch.getId());
+			statement.setInt(3, copies);
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -257,11 +261,13 @@ public final class DatabaseManager {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_BORROWER);
-			statement.setString(0, borrower.getCardNumber());
-			statement.setString(1, borrower.getFirstName());
-			statement.setString(2, borrower.getLastName());
-			statement.setString(3, borrower.getAddress());
-			statement.setString(4, borrower.getPhone());
+			statement.setString(1, borrower.getCardNumber());
+			statement.setString(2, borrower.getFirstName());
+			statement.setString(3, borrower.getLastName());
+			statement.setString(4, borrower.getAddress());
+			statement.setString(5, borrower.getCity());
+			statement.setString(6, borrower.getState());
+			statement.setString(7, borrower.getPhone());
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -284,7 +290,10 @@ public final class DatabaseManager {
 			statement.setString(3, loan.getBorrower().getCardNumber());
 			statement.setDate(4, new Date(loan.getDateOut().getTimeInMillis()));
 			statement.setDate(5, new Date(loan.getDueDate().getTimeInMillis()));
-			statement.setDate(6, new Date(loan.getDateIn().getTimeInMillis()));
+			if(loan.getDateIn() != null)
+				statement.setDate(6, new Date(loan.getDateIn().getTimeInMillis()));
+			else
+				statement.setDate(6, null);
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -328,7 +337,7 @@ public final class DatabaseManager {
 						.getResourceAsStream(DROP_SQL));
 				while (scanner.hasNextLine()) {
 					String line = scanner.nextLine();
-					if(!line.isEmpty())
+					if (!line.isEmpty())
 						statement.addBatch(line);
 				}
 			} catch (Exception e) {
@@ -360,7 +369,7 @@ public final class DatabaseManager {
 						.getResourceAsStream(INSERT_SQL));
 				while (scanner.hasNextLine()) {
 					String line = scanner.nextLine();
-					if(!line.isEmpty())
+					if (!line.isEmpty())
 						statement.addBatch(line);
 				}
 			} catch (Exception e) {
@@ -381,7 +390,7 @@ public final class DatabaseManager {
 			}
 		}
 	}
-	
+
 	public void close() {
 		if (databaseManager != null)
 			if (connection != null)

@@ -1,5 +1,3 @@
-/resources/
-/sagar/
 /book_copies.csv
 /book_loans_data.csv
 /books_authors.csv
@@ -7,3 +5,4 @@
 /drop_library.sql
 /library.sql
 /library_branch.csv
+/sagar/

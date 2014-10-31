@@ -57,19 +57,77 @@ public class Library {
 	 * Re-Initialize the Library Database from the given input csv files
 	 */
 	public void initialize() {
+		DatabaseManager db = null;
 		try {
 			readBranches();
 			readBorrowers();
 			readLoans();
 
-			DatabaseManager db = DatabaseManager.getInstane();
+			db = DatabaseManager.getInstane();
 			db.dropLibrary();
 			db.createLibrary();
 
+			loadBooks();
+			loadAuthors();
+			loadBranches();
+			loadCopies();
+			loadBorrowers();
+			loadLoans();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (FileEmptyException e) {
 			e.printStackTrace();
+		} finally {
+			if (db != null)
+				db.close();
+		}
+	}
+
+	private void loadBooks() {
+		DatabaseManager db = DatabaseManager.getInstane();
+		for (Book book : books) {
+			db.insertBook(book);
+		}
+	}
+
+	private void loadAuthors() {
+		DatabaseManager db = DatabaseManager.getInstane();
+		for (Book book : books) {
+			for (Author author : book.getAuthors()) {
+				db.insertAuthor(book, author);
+			}
+		}
+	}
+
+	private void loadBranches() {
+		DatabaseManager db = DatabaseManager.getInstane();
+		for (Branch branch : branches) {
+			db.insertBranch(branch);
+		}
+	}
+
+	private void loadCopies() {
+		DatabaseManager db = DatabaseManager.getInstane();
+		for (Branch branch : branches) {
+			for (HashMap<Book, Integer> bookCopies : branch.getBooks()) {
+				for (Book book : bookCopies.keySet()) {
+					db.insertBookCopies(branch, book, bookCopies.get(book));
+				}
+			}
+		}
+	}
+
+	private void loadBorrowers() {
+		DatabaseManager db = DatabaseManager.getInstane();
+		for (Borrower borrower : borrowers) {
+			db.insertBorrower(borrower);
+		}
+	}
+
+	private void loadLoans() {
+		DatabaseManager db = DatabaseManager.getInstane();
+		for (Loan loan : loans) {
+			db.insertLoans(loan);
 		}
 	}
 

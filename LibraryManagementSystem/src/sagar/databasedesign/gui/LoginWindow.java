@@ -165,6 +165,7 @@ public class LoginWindow {
 				switch (userChoice) {
 				case 0:
 					Library library = new Library();
+					library.initialize();
 					break;
 				case 1:
 				case 2:
