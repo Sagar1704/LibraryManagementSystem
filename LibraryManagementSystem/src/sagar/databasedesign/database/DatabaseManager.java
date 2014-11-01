@@ -7,8 +7,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Scanner;
 
+import sagar.databasedesign.enums.Filter;
 import sagar.databasedesign.library.Author;
 import sagar.databasedesign.library.Book;
 import sagar.databasedesign.library.Borrower;
@@ -53,15 +55,32 @@ public final class DatabaseManager {
 	private static final String TITLE = "title";
 	private static final String INSERT_BOOK = "INSERT INTO " + SCHEMA + "."
 			+ BOOK + " VALUES(?, ?);";
-	private static final String SELECT_BOOK = "SELECT " + ISBN + "," + TITLE
+	private static final String SELECT_BOOK = "SELECT " + ISBN + ", " + TITLE
 			+ " FROM " + SCHEMA + "." + BOOK + ";";
 
 	private static final String AUTHOR = "author";
-	private static final String NAME = "name";
+	private static final String AUTHOR_NAME = "author_name";
 	private static final String TYPE = "type";
 	private static final String ROLE = "role";
 	private static final String INSERT_AUTHOR = "INSERT INTO " + SCHEMA + "."
 			+ AUTHOR + " VALUES(?, ?, ?, ?);";
+
+	private static final String SELECT_ALL_BOOK = "SELECT " + ISBN + ", "
+			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+			+ SCHEMA + "." + AUTHOR + " WHERE " + ISBN + " LIKE ? OR " + TITLE
+			+ " LIKE ? OR " + AUTHOR_NAME + " LIKE ?;";
+
+	private static final String SELECT_ISBN_BOOK = "SELECT " + ISBN + ", "
+			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+			+ SCHEMA + "." + AUTHOR + " WHERE " + ISBN + " LIKE ?;";
+
+	private static final String SELECT_TITLE_BOOK = "SELECT " + ISBN + ", "
+			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+			+ SCHEMA + "." + AUTHOR + " WHERE " + TITLE + " LIKE ?;";
+
+	private static final String SELECT_AUTHOR_BOOK = "SELECT " + ISBN + ", "
+			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+			+ SCHEMA + "." + AUTHOR + " WHERE " + AUTHOR_NAME + " LIKE ?;";
 
 	private static final String BRANCH = "branch";
 	private static final String BRANCH_ID = "branch_id";
@@ -84,6 +103,9 @@ public final class DatabaseManager {
 	private static final String PHONE = "phone";
 	private static final String INSERT_BORROWER = "INSERT INTO " + SCHEMA + "."
 			+ BORROWER + " VALUES(?, ?, ?, ?, ?, ?, ?);";
+
+	private static final String SELECT_ALL_BORROWER = "SELECT " + CARD_NO
+			+ ", " + FNAME + ", " + LNAME + " FROM " + SCHEMA + "." + BORROWER;
 
 	private static final String BOOK_LOANS = "book_loans";
 	private static final String DATE_OUT = "date_out";
@@ -217,6 +239,46 @@ public final class DatabaseManager {
 		}
 	}
 
+	public ArrayList<Book> getBooks(String query, String filter) {
+		ArrayList<Book> books = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			if (filter.equalsIgnoreCase(Filter.ALL.getFilter())) {
+				statement = connection.prepareStatement(SELECT_ALL_BOOK);
+				statement.setString(1, "%" + query + "%");
+				statement.setString(2, "%" + query + "%");
+				statement.setString(3, "%" + query + "%");
+			} else if (filter.equalsIgnoreCase(Filter.ISBN.getFilter())) {
+				statement = connection.prepareStatement(SELECT_ISBN_BOOK);
+				statement.setString(1, "%" + query + "%");
+			} else if (filter.equalsIgnoreCase(Filter.TITLE.getFilter())) {
+				statement = connection.prepareStatement(SELECT_TITLE_BOOK);
+				statement.setString(1, "%" + query + "%");
+			} else if (filter.equalsIgnoreCase(Filter.AUTHOR.getFilter())) {
+				statement = connection.prepareStatement(SELECT_AUTHOR_BOOK);
+				statement.setString(1, "%" + query + "%");
+			}
+
+			rs = statement.executeQuery();
+			books = new ArrayList<Book>();
+			while (rs != null && rs.next()) {
+				books.add(new Book(rs.getString(ISBN), rs.getString(TITLE),
+						null));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return books;
+	}
+
 	public void insertBranch(Branch branch) {
 		PreparedStatement statement = null;
 		try {
@@ -281,6 +343,33 @@ public final class DatabaseManager {
 		}
 	}
 
+	public ArrayList<Borrower> getBorrowers() {
+		ArrayList<Borrower> borrowers = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = connection.prepareStatement(SELECT_ALL_BORROWER);
+			rs = statement.executeQuery();
+			borrowers = new ArrayList<Borrower>();
+			while (rs != null && rs.next()) {
+				borrowers.add(new Borrower(rs.getString(CARD_NO), rs
+						.getString(FNAME), rs.getString(LNAME), null, null,
+						null, null));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return borrowers;
+
+	}
+
 	public void insertLoans(Loan loan) {
 		PreparedStatement statement = null;
 		try {
@@ -290,8 +379,9 @@ public final class DatabaseManager {
 			statement.setString(3, loan.getBorrower().getCardNumber());
 			statement.setDate(4, new Date(loan.getDateOut().getTimeInMillis()));
 			statement.setDate(5, new Date(loan.getDueDate().getTimeInMillis()));
-			if(loan.getDateIn() != null)
-				statement.setDate(6, new Date(loan.getDateIn().getTimeInMillis()));
+			if (loan.getDateIn() != null)
+				statement.setDate(6, new Date(loan.getDateIn()
+						.getTimeInMillis()));
 			else
 				statement.setDate(6, null);
 			statement.execute();

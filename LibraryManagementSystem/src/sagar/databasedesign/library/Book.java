@@ -2,6 +2,8 @@ package sagar.databasedesign.library;
 
 import java.util.ArrayList;
 
+import sagar.databasedesign.database.DatabaseManager;
+
 public class Book {
 	private String isbn;
 	private String title;
@@ -84,5 +86,10 @@ public class Book {
 			isbn = "0" + isbn;
 		}
 		return isbn;
+	}
+
+	public ArrayList<Book> searchBooks(String query, String filter) {
+		return DatabaseManager.getInstane().getBooks(query, filter);
+
 	}
 }

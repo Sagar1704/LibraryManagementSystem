@@ -1,5 +1,9 @@
 package sagar.databasedesign.library;
 
+import java.util.ArrayList;
+
+import sagar.databasedesign.database.DatabaseManager;
+
 public class Borrower {
 	private String cardNumber;
 	private String firstName;
@@ -85,4 +89,7 @@ public class Borrower {
 		this.state = state;
 	}
 
+	public ArrayList<Borrower> getBorrowers() {
+		return DatabaseManager.getInstane().getBorrowers();
+	}
 }
