@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
 
+import sagar.databasedesign.database.DatabaseManager;
+
 public class Loan {
 	private Book book;
 	private Branch branch;
@@ -89,4 +91,7 @@ public class Loan {
 		this.dateIn = dateIn;
 	}
 
+	public int getBorrowCount(String cardNo) {
+		return DatabaseManager.getInstane().getBorrowCount(cardNo);
+	}
 }

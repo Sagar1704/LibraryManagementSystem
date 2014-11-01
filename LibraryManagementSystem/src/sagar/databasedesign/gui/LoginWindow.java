@@ -37,6 +37,7 @@ import sagar.databasedesign.enums.Filter;
 import sagar.databasedesign.library.Book;
 import sagar.databasedesign.library.Borrower;
 import sagar.databasedesign.library.Library;
+import sagar.databasedesign.library.Loan;
 import sagar.databasedesign.library.User;
 
 /**
@@ -200,7 +201,35 @@ public class LoginWindow {
 		btnCheckout.setEnabled(false);
 		btnCheckout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-//				int borrowCount = 
+				int selectedCount = table.getSelectedRowCount();
+				if(selectedCount == 0)
+					JOptionPane.showMessageDialog(frmLogin, "Please select a book");
+				else {
+					int borrowCount = new Loan().getBorrowCount(comboBoxBorrower
+							.getItemAt(comboBoxBorrower.getSelectedIndex()).split(
+									"::")[0]);
+					if (borrowCount == Borrower.MAX_BORROW)
+					JOptionPane
+							.showMessageDialog(
+									frmLogin,
+									"Sorry, Cannot Checkout!\n"
+											+ comboBoxBorrower.getItemAt(comboBoxBorrower
+													.getSelectedIndex())
+											+ " has already reached max checkout limit of: "
+											+ Borrower.MAX_BORROW);
+				else if (selectedCount + borrowCount > Borrower.MAX_BORROW)
+					JOptionPane.showMessageDialog(
+							frmLogin,
+							"Sorry, Cannot Checkout!\n"
+									+ comboBoxBorrower
+											.getItemAt(comboBoxBorrower
+													.getSelectedIndex())
+									+ " can only borrow "
+									+ (Borrower.MAX_BORROW - borrowCount)
+									+ " more books.");
+				else {
+					
+				}}
 			}
 		});
 		btnCheckout.setBounds(552, 591, 128, 29);
@@ -269,12 +298,14 @@ public class LoginWindow {
 		table.setFillsViewportHeight(true);
 		table.setBorder(new LineBorder(new Color(0, 0, 0), 2, true));
 		table.setForeground(new Color(0, 0, 139));
-		table.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+		table.setFont(new Font("Segoe UI", Font.PLAIN, 18));
 
 		scrollPaneResults = new JScrollPane();
-		scrollPaneResults.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		scrollPaneResults.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPaneResults
+				.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPaneResults.setBounds(215, 100, 808, 475);
-		scrollPaneResults.setColumnHeaderView(table);
+		scrollPaneResults.setViewportView(table);
 		panelSearch.add(scrollPaneResults);
 
 		btnSearch = new JButton("Search");
@@ -294,18 +325,19 @@ public class LoginWindow {
 							btnCheckout.setEnabled(true);
 					}
 				});
-				
-				table.setModel(dtm);
-				table.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
-					@Override
-					public void valueChanged(ListSelectionEvent e) {
-					}
-				});
 
-				String[] header = { "Book Title" };
+				table.setModel(dtm);
+				table.getSelectionModel().addListSelectionListener(
+						new ListSelectionListener() {
+							@Override
+							public void valueChanged(ListSelectionEvent e) {
+							}
+						});
+
+				String[] header = { "ISBN", "Book Title", "Author" };
 				dtm.setColumnIdentifiers(header);
 				for (Book book : books) {
-					dtm.addRow(new String[] { book.getTitle() });
+					dtm.addRow(new String[] { book.getId(), book.getTitle(), book.getAuthors().toString() });
 				}
 			}
 		});

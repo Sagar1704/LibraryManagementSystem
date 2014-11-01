@@ -116,6 +116,10 @@ public final class DatabaseManager {
 			+ ", " + DATE_OUT + ", " + DUE_DATE + ", " + DATE_IN
 			+ ") VALUES(?, ?, ?, ?, ?, ?);";
 
+	private static final String SELECT_BORROW_COUNT = "SELECT COUNT(*) FROM "
+			+ SCHEMA + "." + BORROWER + " NATURAL JOIN " + SCHEMA + "."
+			+ BOOK_LOANS + " WHERE " + CARD_NO + "=?;";
+
 	private static final String FINES = "FINES";
 	private static final String LOAN_ID = "loan_id";
 	private static final String FINE_AMT = "fine_amt";
@@ -395,6 +399,31 @@ public final class DatabaseManager {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public int getBorrowCount(String cardNo) {
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		int borrowCount = 0;
+		try {
+			statement = connection.prepareStatement(SELECT_BORROW_COUNT);
+			statement.setString(1, cardNo);
+			rs = statement.executeQuery();
+			if(rs.next())
+				borrowCount = rs.getInt(1);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+				if (rs != null)
+					rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return borrowCount;
 	}
 
 	public void insertFine(Fine fine) {

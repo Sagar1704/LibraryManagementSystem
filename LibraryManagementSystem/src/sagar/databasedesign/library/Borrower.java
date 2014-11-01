@@ -4,7 +4,15 @@ import java.util.ArrayList;
 
 import sagar.databasedesign.database.DatabaseManager;
 
+/**
+ * Library Card owner
+ * 
+ * @author Sagar
+ * 
+ */
 public class Borrower {
+	public static final int MAX_BORROW = 3;
+
 	private String cardNumber;
 	private String firstName;
 	private String lastName;
