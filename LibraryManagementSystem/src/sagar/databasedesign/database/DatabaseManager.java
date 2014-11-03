@@ -36,8 +36,6 @@ public final class DatabaseManager {
 	private static final String USE_STATEMENT = "use " + SCHEMA + ";";
 
 	private static final String INSERT_SQL = "library.sql";
-	private static final String INSERT_SOURCE = "source " + INSERT_SQL;
-
 	private static final String DROP_SQL = "drop_library.sql";
 
 	private static final String USERINFO = "userinfo";
@@ -160,6 +158,8 @@ public final class DatabaseManager {
 			+ FINES + " VALUES(?, ?, ?);";
 	private static final String SELECT_ALL_FINES = "SELECT * FROM " + SCHEMA
 			+ "." + FINES + ";";
+	private static final String SELECT_UNPAID_FINES = "SELECT * FROM " + SCHEMA
+			+ "." + FINES + " WHERE " + PAID + "=?;";
 	private static final String SELECT_BORROWER_FINES = "SELECT " + CARD_NO
 			+ ", SUM(" + FINE_AMT + ") FROM " + SCHEMA + "." + FINES
 			+ " NATURAL JOIN " + SCHEMA + "." + BOOK_LOANS + " WHERE " + PAID
@@ -167,6 +167,9 @@ public final class DatabaseManager {
 	private static final String UPDATE_FINES = "UPDATE " + SCHEMA + "." + FINES
 			+ " SET " + FINE_AMT + "=?, " + PAID + "=? WHERE " + LOAN_ID
 			+ "=?;";
+
+	private static final String SELECT_ID_LOAN = "SELECT * FROM " + SCHEMA
+			+ "." + BOOK_LOANS + " WHERE " + LOAN_ID + "=?;";
 
 	private DatabaseManager() {
 		try {
@@ -308,6 +311,43 @@ public final class DatabaseManager {
 			}
 		}
 		return books;
+	}
+
+	public Book getBook(String isbn) {
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		ResultSet rsAuthor = null;
+		Book book = null;
+		try {
+			statement = connection.prepareStatement(SELECT_ISBN_BOOK);
+			statement.setString(1, isbn);
+
+			rs = statement.executeQuery();
+			statement = connection.prepareStatement(SELECT_AUTHOR);
+			if (rs != null && rs.next()) {
+				statement.setString(1, rs.getString(ISBN));
+				rsAuthor = statement.executeQuery();
+				ArrayList<Author> authors = new ArrayList<Author>();
+				while (rsAuthor != null && rsAuthor.next())
+					authors.add(new Author(rsAuthor.getString(AUTHOR_NAME), 0,
+							null));
+
+				book = new Book(rs.getString(ISBN), rs.getString(TITLE),
+						authors);
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return book;
+
 	}
 
 	public ArrayList<Book> getBooks(String query, String filter) {
@@ -654,6 +694,35 @@ public final class DatabaseManager {
 		return loans;
 	}
 
+	public Loan getLoanById(int id) {
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		Loan loan = null;
+		try {
+			statement = connection.prepareStatement(SELECT_ID_LOAN);
+			statement.setInt(1, id);
+			rs = statement.executeQuery();
+			if (rs != null && rs.next()) {
+				loan = new Loan(rs.getInt(LOAN_ID),
+						getBook(rs.getString(ISBN)), new Branch(
+								rs.getInt(BRANCH_ID)),
+						getBorrower(Integer.parseInt(rs.getString(CARD_NO))),
+						rs.getDate(DATE_OUT), rs.getDate(DUE_DATE),
+						rs.getDate(DATE_IN));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return loan;
+	}
+
 	public ArrayList<Loan> getLoans(Book book) {
 		ArrayList<Loan> loans = null;
 		PreparedStatement statement = null;
@@ -847,6 +916,33 @@ public final class DatabaseManager {
 		}
 	}
 
+	public ArrayList<Fine> getUnpaidFines() {
+		ArrayList<Fine> fines = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = connection.prepareStatement(SELECT_UNPAID_FINES);
+			statement.setBoolean(1, false);
+			rs = statement.executeQuery();
+			fines = new ArrayList<Fine>();
+			while (rs.next())
+				fines.add(new Fine(rs.getInt(LOAN_ID), rs.getFloat(FINE_AMT),
+						rs.getBoolean(PAID)));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+				if (rs != null)
+					rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return fines;
+	}
+
 	public ArrayList<Fine> getFines() {
 		ArrayList<Fine> fines = null;
 		PreparedStatement statement = null;
@@ -882,7 +978,7 @@ public final class DatabaseManager {
 			statement.setBoolean(1, false);
 			statement.setInt(2, borrower.getCardNumber());
 			rs = statement.executeQuery();
-			if(rs != null && rs.next())
+			if (rs != null && rs.next())
 				fine = rs.getFloat(2);
 		} catch (SQLException e) {
 			e.printStackTrace();

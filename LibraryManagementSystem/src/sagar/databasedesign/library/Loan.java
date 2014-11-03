@@ -155,4 +155,8 @@ public class Loan {
 	public Date getDateOutDB() {
 		return DatabaseManager.getInstane().getDateOut(this);
 	}
+	
+	public Loan getLoanById() {
+		return DatabaseManager.getInstane().getLoanById(loanId);
+	}
 }

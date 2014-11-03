@@ -70,6 +70,7 @@ public class LoginWindow {
 	private JButton btnSearch;
 	private JScrollPane scrollPaneResults;
 	private DefaultTableModel coDTM;
+	private DefaultTableModel fineDTM;
 	private JButton btnCheckout;
 	private JPanel panelMenu;
 	private JComboBox<String> comboBoxBorrower;
@@ -110,6 +111,11 @@ public class LoginWindow {
 	private JLabel lblFineDue;
 	private JTextField textFieldFine;
 	private JLabel lblFines;
+	private JMenuItem mntmPayFine;
+	private JPanel panelPayFine;
+	private JLabel lblPayFine;
+	private JTable tableFine;
+	private JButton btnPay;
 
 	/**
 	 * Launch the application.
@@ -222,6 +228,55 @@ public class LoginWindow {
 		panelFines.setBackground(new Color(255, 140, 0));
 		panelFines.setBounds(0, 33, 1263, 628);
 		panelFines.setVisible(false);
+
+		panelPayFine = new JPanel();
+		panelPayFine.setBackground(new Color(255, 140, 0));
+		panelPayFine.setBounds(0, 33, 1263, 628);
+		panelLMS.add(panelPayFine);
+		panelPayFine.setLayout(null);
+		panelPayFine.setVisible(false);
+
+		lblPayFine = new JLabel("Pay Fine");
+		lblPayFine.setForeground(new Color(0, 128, 0));
+		lblPayFine.setBounds(564, 44, 127, 37);
+		lblPayFine.setFont(new Font("Tahoma", Font.BOLD, 30));
+		panelPayFine.add(lblPayFine);
+
+		JScrollPane scrollPaneFine = new JScrollPane();
+		scrollPaneFine.setBounds(215, 100, 808, 475);
+		panelPayFine.add(scrollPaneFine);
+
+		tableFine = new JTable();
+		tableFine
+				.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		tableFine.setFillsViewportHeight(true);
+		tableFine.setBorder(new LineBorder(new Color(0, 0, 0), 2, true));
+		tableFine.setForeground(new Color(0, 0, 139));
+		tableFine.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+		tableFine.setRowHeight(50);
+		tableFine.setColumnSelectionAllowed(false);
+		scrollPaneFine.setColumnHeaderView(tableFine);
+		scrollPaneFine.setViewportView(tableFine);
+
+		btnPay = new JButton("Pay");
+		btnPay.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				for (int selection : tableFine.getSelectedRows()) {
+					new Fine(Integer.parseInt(""
+							+ tableFine.getValueAt(selection, 0)),
+							Float.parseFloat(""
+									+ tableFine.getValueAt(selection, 3)), true)
+							.updateFine();
+					
+				}
+				JOptionPane.showMessageDialog(frmLogin, "Paid successfully");
+				mntmPayFine.doClick();
+			}
+		});
+		btnPay.setFont(new Font("Tahoma", Font.BOLD, 20));
+		btnPay.setBounds(576, 583, 115, 29);
+		btnPay.setEnabled(false);
+		panelPayFine.add(btnPay);
 		panelLMS.add(panelFines);
 		panelFines.setLayout(null);
 
@@ -510,6 +565,9 @@ public class LoginWindow {
 				lblBorrower.setVisible(false);
 				comboBoxBorrower.setVisible(false);
 				panelBorrower.setVisible(false);
+				panelPayFine.setVisible(false);
+				panelCheckin.setVisible(false);
+				panelFines.setVisible(false);
 			}
 		});
 		mntmSearch.setFont(new Font("Segoe UI", Font.PLAIN, 20));
@@ -542,6 +600,9 @@ public class LoginWindow {
 				}
 				comboBoxBorrower.setVisible(true);
 				panelBorrower.setVisible(false);
+				panelCheckin.setVisible(false);
+				panelFines.setVisible(false);
+				panelPayFine.setVisible(false);
 			}
 		});
 		mntmCheckout.setFont(new Font("Segoe UI", Font.PLAIN, 20));
@@ -552,6 +613,8 @@ public class LoginWindow {
 			public void actionPerformed(ActionEvent e) {
 				panelSearch.setVisible(false);
 				panelBorrower.setVisible(false);
+				panelFines.setVisible(false);
+				panelPayFine.setVisible(false);
 				panelCheckin.setVisible(true);
 			}
 		});
@@ -562,8 +625,13 @@ public class LoginWindow {
 		mntmGetFines.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				panelFines.setVisible(true);
+				panelSearch.setVisible(false);
+				panelCheckin.setVisible(false);
+				panelPayFine.setVisible(false);
+				panelBorrower.setVisible(false);
 				ArrayList<Borrower> borrowers = new ArrayList<Borrower>();
-				ArrayList<Fine> fines = new Fine().getfines();
+				ArrayList<Fine> unPaidfines = new Fine().getUnpaidFines();
+				ArrayList<Fine> paidFines = new Fine().getfines();
 				for (Loan loan : new Loan().getLoans()) {
 					if (loan.getDateIn().after(loan.getDueDate())) {
 						Fine fine = new Fine(loan.getLoanId(), ((loan
@@ -572,12 +640,12 @@ public class LoginWindow {
 								.getTimeInMillis()
 								- loan.getDueDate().getTimeInMillis())
 								/ ((1000 * 60 * 60 * 24)) * Fine.RATE), false);
-						if (fines.contains(fine)) {
+						if (unPaidfines.contains(fine)) {
 							fine.updateFine();
-						} else {
+						} else if(!paidFines.contains(fine)){
 							fine.insertFine();
 						}
-						if(!borrowers.contains(loan.getBorrower()))
+						if (!borrowers.contains(loan.getBorrower()))
 							borrowers.add(loan.getBorrower());
 					}
 				}
@@ -781,6 +849,58 @@ public class LoginWindow {
 		});
 		mntmAddBorrower.setFont(new Font("Segoe UI", Font.PLAIN, 20));
 		mnAdministrator.add(mntmAddBorrower);
+
+		mntmPayFine = new JMenuItem("Pay Fine");
+		mntmPayFine.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+		mntmPayFine.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+
+				panelPayFine.setVisible(true);
+				panelSearch.setVisible(false);
+				panelCheckin.setVisible(false);
+				panelFines.setVisible(false);
+				panelBorrower.setVisible(false);
+				ArrayList<Fine> fines = new Fine().getUnpaidFines();
+				fineDTM = new DefaultTableModel(0, 0) {
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 3630094735024498745L;
+
+					@Override
+					public boolean isCellEditable(int row, int column) {
+						return false;
+					}
+				};
+				fineDTM.addTableModelListener(new TableModelListener() {
+					@Override
+					public void tableChanged(TableModelEvent e) {
+						if (fineDTM.getRowCount() == 0)
+							btnPay.setEnabled(false);
+						else
+							btnPay.setEnabled(true);
+					}
+				});
+
+				tableFine.setModel(fineDTM);
+
+				String[] header = { "Loan ID", "Borrower", "Book Title", "Fine" };
+				fineDTM.setColumnIdentifiers(header);
+				for (Fine fine : fines) {
+					Loan loan = new Loan();
+					loan.setLoanId(fine.getLoanId());
+					loan = loan.getLoanById();
+					fineDTM.addRow(new String[] {
+							"" + loan.getLoanId(),
+							loan.getBorrower().getFirstName() + " "
+									+ loan.getBorrower().getLastName(),
+							loan.getBook().getTitle(), "" + fine.getFine_amt() });
+
+				}
+
+			}
+		});
+		mnAdministrator.add(mntmPayFine);
 
 		JMenu mnHelp = new JMenu("Help");
 		mnHelp.setFont(new Font("Segoe UI", Font.PLAIN, 24));

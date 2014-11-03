@@ -88,4 +88,8 @@ public class Fine {
 	public void updateFine() {
 		DatabaseManager.getInstane().updateFine(fine_amt, paid, loanId);
 	}
+	
+	public ArrayList<Fine> getUnpaidFines() {
+		return DatabaseManager.getInstane().getUnpaidFines();
+	}
 }
