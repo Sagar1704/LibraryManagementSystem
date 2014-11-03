@@ -11,7 +11,8 @@ import sagar.databasedesign.database.DatabaseManager;
 
 public class Loan {
 	private static final int DAYS = 14;
-	
+
+	private int loanId;
 	private Book book;
 	private Branch branch;
 	private Borrower borrower;
@@ -31,6 +32,21 @@ public class Loan {
 		this.borrower = borrower;
 		this.dueDate.add(Calendar.DAY_OF_MONTH, DAYS);
 		this.dateIn = null;
+	}
+
+	public Loan(int loanId, Book book, Branch branch, Borrower borrower,
+			Date dateOut, Date dueDate, Date dateIn) {
+		super();
+		this.loanId = loanId;
+		this.book = book;
+		this.branch = branch;
+		this.borrower = borrower;
+		this.dateOut.setTimeInMillis(dateOut.getTime());
+		this.dueDate.setTimeInMillis(dueDate.getTime());
+		if (dateIn != null)
+			this.dateIn.setTimeInMillis(dateIn.getTime());
+		else
+			dateIn = null;
 	}
 
 	public Loan(Book book, Branch branch, Borrower borrower, String dateOut,
@@ -54,6 +70,14 @@ public class Loan {
 	}
 
 	public Loan() {
+	}
+
+	public int getLoanId() {
+		return loanId;
+	}
+
+	public void setLoanId(int loanId) {
+		this.loanId = loanId;
 	}
 
 	public Book getBook() {
@@ -107,23 +131,27 @@ public class Loan {
 	public int getBorrowCount(String cardNo) {
 		return DatabaseManager.getInstane().getBorrowCount(cardNo);
 	}
-	
+
 	public void checkout(int copies) {
 		DatabaseManager.getInstane().checkout(this, copies);
 	}
-	
+
 	public ArrayList<Loan> getLoans(Book book) {
 		return DatabaseManager.getInstane().getLoans(book);
 	}
-	
+
 	public ArrayList<Loan> getLoans(Borrower borrower) {
 		return DatabaseManager.getInstane().getLoans(borrower);
 	}
-	
+
+	public ArrayList<Loan> getLoans() {
+		return DatabaseManager.getInstane().getLoans();
+	}
+
 	public void checkin(int copies) {
 		DatabaseManager.getInstane().checkin(this, copies);
 	}
-	
+
 	public Date getDateOutDB() {
 		return DatabaseManager.getInstane().getDateOut(this);
 	}

@@ -116,7 +116,8 @@ public final class DatabaseManager {
 	private static final String INSERT_BORROWER = "INSERT INTO " + SCHEMA + "."
 			+ BORROWER + " VALUES(?, ?, ?, ?, ?, ?, ?);";
 	private static final String SELECT_ALL_BORROWER = "SELECT " + CARD_NO
-			+ ", " + FNAME + ", " + LNAME + ", " + ADDRESS + " FROM " + SCHEMA + "." + BORROWER;
+			+ ", " + FNAME + ", " + LNAME + ", " + ADDRESS + " FROM " + SCHEMA
+			+ "." + BORROWER;
 	private static final String SELECT_CARD_BORROWER = "SELECT " + CARD_NO
 			+ ", " + FNAME + ", " + LNAME + " FROM " + SCHEMA + "." + BORROWER
 			+ " WHERE " + CARD_NO + "=?";
@@ -148,6 +149,8 @@ public final class DatabaseManager {
 	private static final String SELECT_DATE_OUT = "SELECT " + DATE_OUT
 			+ " FROM " + SCHEMA + "." + BOOK_LOANS + " WHERE " + ISBN
 			+ "=? AND " + BRANCH_ID + "=? AND " + CARD_NO + "=?;";
+	private static final String SELECT_ALL_LOAN = "SELECT * FROM " + SCHEMA
+			+ "." + BOOK_LOANS + ";";
 
 	private static final String FINES = "FINES";
 	private static final String LOAN_ID = "loan_id";
@@ -155,6 +158,15 @@ public final class DatabaseManager {
 	private static final String PAID = "paid";
 	private static final String INSERT_FINES = "INSERT INTO " + SCHEMA + "."
 			+ FINES + " VALUES(?, ?, ?);";
+	private static final String SELECT_ALL_FINES = "SELECT * FROM " + SCHEMA
+			+ "." + FINES + ";";
+	private static final String SELECT_BORROWER_FINES = "SELECT " + CARD_NO
+			+ ", SUM(" + FINE_AMT + ") FROM " + SCHEMA + "." + FINES
+			+ " NATURAL JOIN " + SCHEMA + "." + BOOK_LOANS + " WHERE " + PAID
+			+ "=? AND " + CARD_NO + "=? GROUP BY " + CARD_NO + ";";
+	private static final String UPDATE_FINES = "UPDATE " + SCHEMA + "." + FINES
+			+ " SET " + FINE_AMT + "=?, " + PAID + "=? WHERE " + LOAN_ID
+			+ "=?;";
 
 	private DatabaseManager() {
 		try {
@@ -519,8 +531,8 @@ public final class DatabaseManager {
 			borrowers = new ArrayList<Borrower>();
 			while (rs != null && rs.next()) {
 				borrowers.add(new Borrower(rs.getInt(CARD_NO), rs
-						.getString(FNAME), rs.getString(LNAME), rs.getString(ADDRESS), null,
-						null, null));
+						.getString(FNAME), rs.getString(LNAME), rs
+						.getString(ADDRESS), null, null, null));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -536,13 +548,13 @@ public final class DatabaseManager {
 
 	}
 
-	public Borrower getBorrowers(String cardNo) {
+	public Borrower getBorrower(int cardNo) {
 		Borrower borrower = null;
 		PreparedStatement statement = null;
 		ResultSet rs = null;
 		try {
 			statement = connection.prepareStatement(SELECT_CARD_BORROWER);
-			statement.setString(1, cardNo);
+			statement.setInt(1, cardNo);
 			rs = statement.executeQuery();
 			while (rs != null && rs.next()) {
 				borrower = new Borrower(rs.getInt(CARD_NO),
@@ -614,6 +626,34 @@ public final class DatabaseManager {
 		}
 	}
 
+	public ArrayList<Loan> getLoans() {
+		ArrayList<Loan> loans = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = connection.prepareStatement(SELECT_ALL_LOAN);
+			rs = statement.executeQuery();
+			loans = new ArrayList<Loan>();
+			while (rs != null && rs.next()) {
+				loans.add(new Loan(rs.getInt(LOAN_ID), new Book(rs
+						.getString(ISBN)), new Branch(rs.getInt(BRANCH_ID)),
+						getBorrower(Integer.parseInt(rs.getString(CARD_NO))),
+						rs.getDate(DATE_OUT), rs.getDate(DUE_DATE), rs
+								.getDate(DATE_IN)));
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return loans;
+	}
+
 	public ArrayList<Loan> getLoans(Book book) {
 		ArrayList<Loan> loans = null;
 		PreparedStatement statement = null;
@@ -630,9 +670,8 @@ public final class DatabaseManager {
 			if (rsBook != null && rsBook.next())
 				book.setTitle(rsBook.getString(TITLE));
 			while (rs != null && rs.next()) {
-
 				loans.add(new Loan(book, new Branch(rs.getInt(BRANCH_ID)),
-						getBorrowers(rs.getString(CARD_NO))));
+						getBorrower(Integer.parseInt(rs.getString(CARD_NO)))));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -668,7 +707,7 @@ public final class DatabaseManager {
 					book.setTitle(rsBook.getString(TITLE));
 
 				loans.add(new Loan(book, new Branch(rs.getInt(BRANCH_ID)),
-						getBorrowers(rs.getString(CARD_NO))));
+						getBorrower(Integer.parseInt(rs.getString(CARD_NO)))));
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -772,9 +811,9 @@ public final class DatabaseManager {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_FINES);
-			statement.setString(0, fine.getLoanId());
-			statement.setFloat(1, fine.getFine_amt());
-			statement.setBoolean(2, fine.isPaid());
+			statement.setInt(1, fine.getLoanId());
+			statement.setFloat(2, fine.getFine_amt());
+			statement.setBoolean(3, fine.isPaid());
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -786,6 +825,78 @@ public final class DatabaseManager {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void updateFine(float fine, boolean paid, int loanId) {
+		PreparedStatement statement = null;
+		try {
+			statement = connection.prepareStatement(UPDATE_FINES);
+			statement.setFloat(1, fine);
+			statement.setBoolean(2, paid);
+			statement.setInt(3, loanId);
+			statement.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public ArrayList<Fine> getFines() {
+		ArrayList<Fine> fines = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = connection.prepareStatement(SELECT_ALL_FINES);
+			rs = statement.executeQuery();
+			fines = new ArrayList<Fine>();
+			while (rs.next())
+				fines.add(new Fine(rs.getInt(LOAN_ID), rs.getFloat(FINE_AMT),
+						rs.getBoolean(PAID)));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+				if (rs != null)
+					rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return fines;
+	}
+
+	public float getFinesByBorrower(Borrower borrower) {
+		float fine = 0.0f;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = connection.prepareStatement(SELECT_BORROWER_FINES);
+			statement.setBoolean(1, false);
+			statement.setInt(2, borrower.getCardNumber());
+			rs = statement.executeQuery();
+			if(rs != null && rs.next())
+				fine = rs.getFloat(2);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+				if (rs != null)
+					rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return fine;
 	}
 
 	public void dropLibrary() {

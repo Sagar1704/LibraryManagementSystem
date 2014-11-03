@@ -39,6 +39,7 @@ import sagar.databasedesign.enums.SearchBy;
 import sagar.databasedesign.library.Book;
 import sagar.databasedesign.library.Borrower;
 import sagar.databasedesign.library.Branch;
+import sagar.databasedesign.library.Fine;
 import sagar.databasedesign.library.Library;
 import sagar.databasedesign.library.Loan;
 import sagar.databasedesign.library.User;
@@ -105,6 +106,10 @@ public class LoginWindow {
 	private JPanel panelBorrower;
 	private JMenuItem mntmAddBorrower;
 	private JPanel panelFines;
+	private JComboBox<String> comboBoxFinedUsers;
+	private JLabel lblFineDue;
+	private JTextField textFieldFine;
+	private JLabel lblFines;
 
 	/**
 	 * Launch the application.
@@ -212,6 +217,48 @@ public class LoginWindow {
 		panelLMS.setBackground(new Color(255, 165, 0));
 		frmLogin.getContentPane().add(panelLMS, "name_611365057672554");
 		panelLMS.setLayout(null);
+
+		panelFines = new JPanel();
+		panelFines.setBackground(new Color(255, 140, 0));
+		panelFines.setBounds(0, 33, 1263, 628);
+		panelFines.setVisible(false);
+		panelLMS.add(panelFines);
+		panelFines.setLayout(null);
+
+		comboBoxFinedUsers = new JComboBox<String>();
+		comboBoxFinedUsers.setFont(new Font("Tahoma", Font.BOLD, 20));
+		comboBoxFinedUsers.setBounds(443, 203, 356, 40);
+		comboBoxFinedUsers.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				textFieldFine.setText(""
+						+ new Fine().getFinesByBorrower(new Borrower(Integer
+								.parseInt(comboBoxFinedUsers.getItemAt(
+										comboBoxFinedUsers.getSelectedIndex())
+										.split("::")[0]))));
+			}
+		});
+		panelFines.add(comboBoxFinedUsers);
+
+		lblFineDue = new JLabel("Fine Due ::");
+		lblFineDue.setForeground(new Color(0, 128, 0));
+		lblFineDue.setFont(new Font("Segoe UI", Font.BOLD, 24));
+		lblFineDue.setBounds(443, 317, 132, 30);
+		panelFines.add(lblFineDue);
+
+		textFieldFine = new JTextField();
+		textFieldFine.setEditable(false);
+		textFieldFine.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		textFieldFine.setBounds(599, 317, 200, 30);
+		panelFines.add(textFieldFine);
+		textFieldFine.setColumns(10);
+
+		lblFines = new JLabel("Fines");
+		lblFines.setHorizontalAlignment(SwingConstants.CENTER);
+		lblFines.setForeground(new Color(0, 128, 0));
+		lblFines.setFont(new Font("Segoe UI Black", Font.BOLD, 40));
+		lblFines.setBounds(443, 59, 356, 50);
+		panelFines.add(lblFines);
 
 		panelBorrower = new JPanel();
 		panelBorrower.setBackground(new Color(255, 140, 0));
@@ -512,6 +559,36 @@ public class LoginWindow {
 		mnLibrary.add(mntmCheckin);
 
 		JMenuItem mntmGetFines = new JMenuItem("Get Fines");
+		mntmGetFines.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				panelFines.setVisible(true);
+				ArrayList<Borrower> borrowers = new ArrayList<Borrower>();
+				ArrayList<Fine> fines = new Fine().getfines();
+				for (Loan loan : new Loan().getLoans()) {
+					if (loan.getDateIn().after(loan.getDueDate())) {
+						Fine fine = new Fine(loan.getLoanId(), ((loan
+								.getDateIn() == null ? Calendar.getInstance()
+								.getTimeInMillis() : loan.getDateIn()
+								.getTimeInMillis()
+								- loan.getDueDate().getTimeInMillis())
+								/ ((1000 * 60 * 60 * 24)) * Fine.RATE), false);
+						if (fines.contains(fine)) {
+							fine.updateFine();
+						} else {
+							fine.insertFine();
+						}
+						if(!borrowers.contains(loan.getBorrower()))
+							borrowers.add(loan.getBorrower());
+					}
+				}
+				for (Borrower borrower : borrowers) {
+					comboBoxFinedUsers.addItem(borrower.getCardNumber() + "::"
+							+ borrower.getFirstName() + " "
+							+ borrower.getLastName());
+				}
+
+			}
+		});
 		mntmGetFines.setFont(new Font("Segoe UI", Font.PLAIN, 20));
 		mnLibrary.add(mntmGetFines);
 
@@ -695,6 +772,8 @@ public class LoginWindow {
 		mntmAddBorrower = new JMenuItem("Add Borrower");
 		mntmAddBorrower.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				panelCheckin.setVisible(false);
+				panelSearch.setVisible(false);
 				panelBorrower.setVisible(true);
 				textFieldCardNumber.setText(""
 						+ (new Borrower().getMaxCardNo() + 1));
@@ -754,8 +833,8 @@ public class LoginWindow {
 								+ ciTable.getValueAt(selection, 0)),
 								new Branch(Integer.parseInt(""
 										+ ciTable.getValueAt(selection, 2))),
-								new Borrower(Integer.parseInt("" + ciTable.getValueAt(
-										selection, 3))));
+								new Borrower(Integer.parseInt(""
+										+ ciTable.getValueAt(selection, 3))));
 						Calendar cal = Calendar.getInstance();
 						cal.setTime(calendar.getDate());
 						loan.setDateIn(cal);
@@ -918,10 +997,6 @@ public class LoginWindow {
 			}
 		});
 		panelCheckin.add(comboBoxSearchBy);
-		
-		panelFines = new JPanel();
-		panelFines.setBounds(0, 33, 1263, 628);
-		panelLMS.add(panelFines);
 
 	}
 }
