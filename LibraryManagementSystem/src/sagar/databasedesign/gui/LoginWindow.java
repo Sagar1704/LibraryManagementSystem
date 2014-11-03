@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import javax.swing.JButton;
@@ -29,18 +30,20 @@ import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
 import sagar.databasedesign.enums.Filter;
+import sagar.databasedesign.enums.SearchBy;
 import sagar.databasedesign.library.Book;
 import sagar.databasedesign.library.Borrower;
 import sagar.databasedesign.library.Branch;
 import sagar.databasedesign.library.Library;
 import sagar.databasedesign.library.Loan;
 import sagar.databasedesign.library.User;
+
+import com.toedter.calendar.JCalendar;
 
 /**
  * GUI for the Library Management system
@@ -51,22 +54,40 @@ import sagar.databasedesign.library.User;
 public class LoginWindow {
 
 	private JFrame frmLogin;
-
+	private JLabel labelTitle;
+	private JLabel labelUsername;
 	private JTextField textFieldUsername;
+	private JLabel labelPassword;
 	private JPasswordField passwordField;
 	private JPanel panelLogin;
 	private JPanel panelLMS;
 	private JPanel panelSearch;
 	private JTextField textFieldSearch;
 	private JTable table;
+	private JButton buttonLogin;
 	private JComboBox<String> comboBoxFilter;
 	private JButton btnSearch;
 	private JScrollPane scrollPaneResults;
-	private DefaultTableModel dtm;
+	private DefaultTableModel coDTM;
 	private JButton btnCheckout;
+	private JPanel panelMenu;
 	private JComboBox<String> comboBoxBorrower;
 	private JLabel lblBorrower;
 	private JMenuItem mntmSearch;
+	private JPanel panelCheckin;
+	private JMenuBar menuBar;
+	private JMenuItem mntmCheckout;
+	private JTable ciTable;
+	private JScrollPane scrollPaneCI;
+	private JComboBox<String> comboBoxCIBorrower;
+	private JButton btnGetData;
+	private JLabel lblCheckinDate;
+	private JComboBox<String> comboBoxISBN;
+	private JLabel lblSearchBy;
+	private JComboBox<String> comboBoxSearchBy;
+	private DefaultTableModel ciDTM;
+	private JButton btnCheckin;
+	private JCalendar calendar;
 
 	/**
 	 * Launch the application.
@@ -110,7 +131,7 @@ public class LoginWindow {
 		frmLogin.getContentPane().add(panelLogin, "name_611262067352413");
 		panelLogin.setLayout(null);
 
-		JLabel labelTitle = new JLabel("LOGIN");
+		labelTitle = new JLabel("LOGIN");
 		labelTitle.setVerticalAlignment(SwingConstants.TOP);
 		labelTitle.setHorizontalAlignment(SwingConstants.CENTER);
 		labelTitle.setForeground(new Color(0, 128, 0));
@@ -120,7 +141,7 @@ public class LoginWindow {
 		labelTitle.setBounds(475, 76, 289, 49);
 		panelLogin.add(labelTitle);
 
-		JLabel labelUsername = new JLabel("Username");
+		labelUsername = new JLabel("Username");
 		labelUsername.setToolTipText("Enter Username in the text");
 		labelUsername.setHorizontalAlignment(SwingConstants.CENTER);
 		labelUsername.setFont(new Font("Segoe UI Black", Font.PLAIN, 24));
@@ -134,14 +155,14 @@ public class LoginWindow {
 		textFieldUsername.setBounds(583, 190, 378, 56);
 		panelLogin.add(textFieldUsername);
 
-		JLabel labelPassword = new JLabel("Password");
+		labelPassword = new JLabel("Password");
 		labelPassword.setToolTipText("Enter Password in the text");
 		labelPassword.setHorizontalAlignment(SwingConstants.CENTER);
 		labelPassword.setFont(new Font("Segoe UI Black", Font.PLAIN, 24));
 		labelPassword.setBounds(355, 311, 199, 65);
 		panelLogin.add(labelPassword);
 
-		JButton buttonLogin = new JButton("Login");
+		buttonLogin = new JButton("Login");
 		buttonLogin.setFont(new Font("Segoe UI Black", Font.PLAIN, 22));
 		buttonLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -175,13 +196,13 @@ public class LoginWindow {
 		frmLogin.getContentPane().add(panelLMS, "name_611365057672554");
 		panelLMS.setLayout(null);
 
-		JPanel panelMenu = new JPanel();
+		panelMenu = new JPanel();
 		panelMenu.setBounds(0, 0, 1263, 33);
 		panelMenu.setBackground(new Color(255, 165, 0));
 		panelLMS.add(panelMenu);
 		panelMenu.setLayout(null);
 
-		JMenuBar menuBar = new JMenuBar();
+		menuBar = new JMenuBar();
 		menuBar.setBackground(new Color(255, 140, 0));
 		menuBar.setBounds(0, 0, 1263, 34);
 		panelMenu.add(menuBar);
@@ -263,9 +284,11 @@ public class LoginWindow {
 																comboBoxBorrower
 																		.getSelectedIndex())
 														.split("::")[0]));
-								loan.checkout(Integer.parseInt("" + table.getValueAt(selection, 5)) - 1);
+								loan.checkout(Integer.parseInt(""
+										+ table.getValueAt(selection, 5)) - 1);
 							}
-							JOptionPane.showMessageDialog(frmLogin, "Checked Out");
+							JOptionPane.showMessageDialog(frmLogin,
+									"Checked Out");
 							btnSearch.doClick();
 						}
 					}
@@ -301,7 +324,7 @@ public class LoginWindow {
 		comboBoxBorrower.setVisible(false);
 		panelSearch.add(comboBoxBorrower);
 
-		JMenuItem mntmCheckout = new JMenuItem("Checkout");
+		mntmCheckout = new JMenuItem("Checkout");
 		mntmCheckout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				mntmSearch.doClick();
@@ -319,6 +342,12 @@ public class LoginWindow {
 		mnLibrary.add(mntmCheckout);
 
 		JMenuItem mntmCheckin = new JMenuItem("Checkin");
+		mntmCheckin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				panelSearch.setVisible(false);
+				panelCheckin.setVisible(true);
+			}
+		});
 		mntmCheckin.setFont(new Font("Segoe UI", Font.PLAIN, 20));
 		mnLibrary.add(mntmCheckin);
 
@@ -360,7 +389,7 @@ public class LoginWindow {
 				ArrayList<Book> books = new Book().searchBooks(textFieldSearch
 						.getText(), comboBoxFilter.getItemAt(comboBoxFilter
 						.getSelectedIndex()));
-				dtm = new DefaultTableModel(0, 0) {
+				coDTM = new DefaultTableModel(0, 0) {
 					/**
 					 * 
 					 */
@@ -371,28 +400,28 @@ public class LoginWindow {
 						return false;
 					}
 				};
-				dtm.addTableModelListener(new TableModelListener() {
+				coDTM.addTableModelListener(new TableModelListener() {
 					@Override
 					public void tableChanged(TableModelEvent e) {
-						if (dtm.getRowCount() == 0)
+						if (coDTM.getRowCount() == 0)
 							btnCheckout.setEnabled(false);
 						else
 							btnCheckout.setEnabled(true);
 					}
 				});
 
-				table.setModel(dtm);
+				table.setModel(coDTM);
 
 				String[] header = { "ISBN", "Book Title", "Author",
 						"Branch ID", "Total Copies", "Available Copies" };
-				dtm.setColumnIdentifiers(header);
+				coDTM.setColumnIdentifiers(header);
 				for (Book book : books) {
 					// boolean first = true;
 					for (HashMap<Branch, Integer> branches : book
 							.getBranchData()) {
 						for (Branch branch : branches.keySet()) {
 							// if (first) {
-							dtm.addRow(new String[] { book.getId(),
+							coDTM.addRow(new String[] { book.getId(),
 									book.getTitle(),
 									book.getAuthors().toString(),
 									"" + branch.getId(),
@@ -518,6 +547,208 @@ public class LoginWindow {
 		JMenuItem mntmAbout = new JMenuItem("About");
 		mntmAbout.setFont(new Font("Segoe UI", Font.PLAIN, 20));
 		mnHelp.add(mntmAbout);
+
+		panelCheckin = new JPanel();
+		panelCheckin.setBounds(0, 33, 1263, 628);
+		panelLMS.add(panelCheckin);
+		panelCheckin.setBackground(new Color(255, 165, 0));
+		panelCheckin.setVisible(false);
+		panelCheckin.setLayout(null);
+
+		ciTable = new JTable();
+		ciTable.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		ciTable.setFillsViewportHeight(true);
+		ciTable.setBorder(new LineBorder(new Color(0, 0, 0), 2, true));
+		ciTable.setForeground(new Color(0, 0, 139));
+		ciTable.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+		ciTable.setRowHeight(50);
+		ciTable.setColumnSelectionAllowed(false);
+
+		scrollPaneCI = new JScrollPane();
+		scrollPaneCI.setBounds(215, 100, 808, 475);
+		scrollPaneCI
+				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPaneCI
+				.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+		scrollPaneCI.setViewportView(ciTable);
+		panelCheckin.add(scrollPaneCI);
+
+		btnCheckin = new JButton("Checkin");
+		btnCheckin.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<Loan> loans = new ArrayList<Loan>();
+				if (ciTable.getSelectedRowCount() == 0)
+					JOptionPane.showMessageDialog(frmLogin,
+							"Please select a book");
+				else {
+					boolean isDateCorrect = true;
+					for (int selection : ciTable.getSelectedRows()) {
+						Loan loan = new Loan(new Book(""
+								+ ciTable.getValueAt(selection, 0)),
+								new Branch(Integer.parseInt(""
+										+ ciTable.getValueAt(selection, 2))),
+								new Borrower(""
+										+ ciTable.getValueAt(selection, 3)));
+						Calendar cal = Calendar.getInstance();
+						cal.setTime(calendar.getDate());
+						loan.setDateIn(cal);
+						loans.add(loan);
+						if (loan.getDateOutDB().after(calendar.getDate())) {
+							JOptionPane
+									.showMessageDialog(frmLogin,
+											"Checkn date cannot be before checkout date");
+							isDateCorrect = false;
+							break;
+						}
+					}
+
+					if(isDateCorrect) {
+						for (Loan loan : loans) {
+							loan.checkin(loan.getBranch().getAvailableCopies(loan.getBook()));
+						}
+						JOptionPane.showMessageDialog(frmLogin, "Checked In");
+						btnGetData.doClick();
+					}
+				}
+			}
+		});
+		btnCheckin.setBounds(552, 591, 128, 29);
+		btnCheckin.setFont(new Font("Tahoma", Font.BOLD, 20));
+		btnCheckin.setEnabled(false);
+		panelCheckin.add(btnCheckin);
+
+		comboBoxCIBorrower = new JComboBox<String>();
+		comboBoxCIBorrower.setBounds(416, 30, 377, 30);
+		comboBoxCIBorrower.setFont(new Font("Tahoma", Font.BOLD, 20));
+		for (Borrower borrower : new Borrower().getBorrowers()) {
+			comboBoxCIBorrower.addItem(borrower.getCardNumber() + "::"
+					+ borrower.getFirstName() + " " + borrower.getLastName());
+		}
+		comboBoxCIBorrower.setVisible(false);
+		comboBoxCIBorrower.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				btnGetData.doClick();
+			}
+		});
+		panelCheckin.add(comboBoxCIBorrower);
+
+		btnGetData = new JButton("Get Data");
+		btnGetData.setFont(new Font("Segoe UI Black", Font.BOLD, 20));
+		btnGetData.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				ArrayList<Loan> loans = new ArrayList<Loan>();
+				if (("" + comboBoxSearchBy.getItemAt(comboBoxSearchBy
+						.getSelectedIndex())).equalsIgnoreCase(SearchBy.ISBN
+						.getSearchBy())) {
+					loans = new Loan().getLoans(new Book(comboBoxISBN
+							.getItemAt(comboBoxISBN.getSelectedIndex())));
+				} else if (("" + comboBoxSearchBy.getItemAt(comboBoxSearchBy
+						.getSelectedIndex()))
+						.equalsIgnoreCase(SearchBy.BORROWER.getSearchBy())) {
+					loans = new Loan().getLoans(new Borrower(comboBoxCIBorrower
+							.getItemAt(comboBoxCIBorrower.getSelectedIndex())
+							.split("::")[0]));
+				}
+
+				ciDTM = new DefaultTableModel(0, 0) {
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 3630094735024498745L;
+
+					@Override
+					public boolean isCellEditable(int row, int column) {
+						return false;
+					}
+				};
+				ciDTM.addTableModelListener(new TableModelListener() {
+					@Override
+					public void tableChanged(TableModelEvent e) {
+						if (ciDTM.getRowCount() == 0)
+							btnCheckin.setEnabled(false);
+						else
+							btnCheckin.setEnabled(true);
+					}
+				});
+
+				ciTable.setModel(ciDTM);
+
+				String[] header = { "ISBN", "Book Title", "Branch ID",
+						"Card No.", "Borrower" };
+				ciDTM.setColumnIdentifiers(header);
+				for (Loan loan : loans) {
+					ciDTM.addRow(new String[] {
+							loan.getBook().getId(),
+							loan.getBook().getTitle(),
+							"" + loan.getBranch().getId(),
+							loan.getBorrower().getCardNumber(),
+							loan.getBorrower().getFirstName() + " "
+									+ loan.getBorrower().getLastName() });
+
+				}
+
+			}
+		});
+		btnGetData.setBounds(793, 30, 227, 30);
+		panelCheckin.add(btnGetData);
+
+		comboBoxISBN = new JComboBox<String>();
+		comboBoxISBN.setFont(new Font("Tahoma", Font.BOLD, 20));
+		comboBoxISBN.setBounds(416, 30, 377, 30);
+		for (Book book : new Book().getBooks()) {
+			comboBoxISBN.addItem(book.getId());
+		}
+		comboBoxISBN.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				btnGetData.doClick();
+			}
+		});
+		panelCheckin.add(comboBoxISBN);
+
+		lblCheckinDate = new JLabel("Checkin Date");
+		lblCheckinDate.setHorizontalAlignment(SwingConstants.CENTER);
+		lblCheckinDate.setForeground(new Color(0, 128, 0));
+		lblCheckinDate.setFont(new Font("Segoe UI", Font.BOLD, 20));
+		lblCheckinDate.setBounds(5, 83, 198, 30);
+		panelCheckin.add(lblCheckinDate);
+
+		calendar = new JCalendar();
+		calendar.setBounds(5, 113, 198, 159);
+		panelCheckin.add(calendar);
+
+		lblSearchBy = new JLabel("Search By    ");
+		lblSearchBy.setHorizontalAlignment(SwingConstants.TRAILING);
+		lblSearchBy.setFont(new Font("Segoe UI", Font.BOLD, 20));
+		lblSearchBy.setForeground(new Color(0, 128, 0));
+		lblSearchBy.setBounds(5, 30, 214, 30);
+		panelCheckin.add(lblSearchBy);
+
+		comboBoxSearchBy = new JComboBox<String>();
+		comboBoxSearchBy.setFont(new Font("Tahoma", Font.BOLD, 20));
+		comboBoxSearchBy.setBounds(215, 30, 198, 30);
+		comboBoxSearchBy.addItem("ISBN");
+		comboBoxSearchBy.addItem("Borrower");
+		comboBoxSearchBy.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (("" + comboBoxSearchBy.getItemAt(comboBoxSearchBy
+						.getSelectedIndex())).equalsIgnoreCase(SearchBy.ISBN
+						.getSearchBy())) {
+					comboBoxISBN.setVisible(true);
+					comboBoxCIBorrower.setVisible(false);
+					btnGetData.doClick();
+				} else if (("" + comboBoxSearchBy.getItemAt(comboBoxSearchBy
+						.getSelectedIndex()))
+						.equalsIgnoreCase(SearchBy.BORROWER.getSearchBy())) {
+					comboBoxCIBorrower.setVisible(true);
+					comboBoxISBN.setVisible(false);
+					btnGetData.doClick();
+				}
+			}
+		});
+		panelCheckin.add(comboBoxSearchBy);
 
 	}
 }

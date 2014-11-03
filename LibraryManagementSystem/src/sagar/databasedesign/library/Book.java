@@ -101,4 +101,8 @@ public class Book {
 /*	public int getAvailableBookCount(Book book) {
 		return DatabaseManager.getInstane().getAvailableBookCount(book.getId());
 	}*/
+	
+	public ArrayList<Book> getBooks() {
+		return DatabaseManager.getInstane().getBooks();
+	}
 }

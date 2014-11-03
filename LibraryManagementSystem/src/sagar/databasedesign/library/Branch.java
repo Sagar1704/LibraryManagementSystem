@@ -3,6 +3,8 @@ package sagar.databasedesign.library;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import sagar.databasedesign.database.DatabaseManager;
+
 public class Branch {
 	private int id;
 	private String name;
@@ -78,4 +80,7 @@ public class Branch {
 		return true;
 	}
 
+	public int getAvailableCopies(Book book) {
+		return DatabaseManager.getInstane().getAvailableCopies(book, this);
+	}
 }

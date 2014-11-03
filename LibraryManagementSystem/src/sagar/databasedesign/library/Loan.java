@@ -2,7 +2,9 @@ package sagar.databasedesign.library;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 import sagar.databasedesign.database.DatabaseManager;
@@ -108,5 +110,21 @@ public class Loan {
 	
 	public void checkout(int copies) {
 		DatabaseManager.getInstane().checkout(this, copies);
+	}
+	
+	public ArrayList<Loan> getLoans(Book book) {
+		return DatabaseManager.getInstane().getLoans(book);
+	}
+	
+	public ArrayList<Loan> getLoans(Borrower borrower) {
+		return DatabaseManager.getInstane().getLoans(borrower);
+	}
+	
+	public void checkin(int copies) {
+		DatabaseManager.getInstane().checkin(this, copies);
+	}
+	
+	public Date getDateOutDB() {
+		return DatabaseManager.getInstane().getDateOut(this);
 	}
 }
