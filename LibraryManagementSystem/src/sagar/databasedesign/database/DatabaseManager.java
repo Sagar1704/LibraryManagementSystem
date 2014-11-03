@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import sagar.databasedesign.enums.Filter;
@@ -55,8 +56,6 @@ public final class DatabaseManager {
 	private static final String TITLE = "title";
 	private static final String INSERT_BOOK = "INSERT INTO " + SCHEMA + "."
 			+ BOOK + " VALUES(?, ?);";
-	private static final String SELECT_BOOK = "SELECT " + ISBN + ", " + TITLE
-			+ " FROM " + SCHEMA + "." + BOOK + ";";
 
 	private static final String AUTHOR = "author";
 	private static final String AUTHOR_NAME = "author_name";
@@ -64,23 +63,22 @@ public final class DatabaseManager {
 	private static final String ROLE = "role";
 	private static final String INSERT_AUTHOR = "INSERT INTO " + SCHEMA + "."
 			+ AUTHOR + " VALUES(?, ?, ?, ?);";
-
-	private static final String SELECT_ALL_BOOK = "SELECT " + ISBN + ", "
-			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+	private static final String SELECT_ALL_BOOK = "SELECT DISTINCT " + ISBN
+			+ ", " + TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
 			+ SCHEMA + "." + AUTHOR + " WHERE " + ISBN + " LIKE ? OR " + TITLE
 			+ " LIKE ? OR " + AUTHOR_NAME + " LIKE ?;";
-
-	private static final String SELECT_ISBN_BOOK = "SELECT " + ISBN + ", "
-			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+	private static final String SELECT_ISBN_BOOK = "SELECT DISTINCT " + ISBN
+			+ ", " + TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
 			+ SCHEMA + "." + AUTHOR + " WHERE " + ISBN + " LIKE ?;";
-
-	private static final String SELECT_TITLE_BOOK = "SELECT " + ISBN + ", "
-			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+	private static final String SELECT_TITLE_BOOK = "SELECT DISTINCT " + ISBN
+			+ ", " + TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
 			+ SCHEMA + "." + AUTHOR + " WHERE " + TITLE + " LIKE ?;";
-
-	private static final String SELECT_AUTHOR_BOOK = "SELECT " + ISBN + ", "
-			+ TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
+	private static final String SELECT_AUTHOR_BOOK = "SELECT DISTINCT " + ISBN
+			+ ", " + TITLE + " FROM " + SCHEMA + "." + BOOK + " NATURAL JOIN "
 			+ SCHEMA + "." + AUTHOR + " WHERE " + AUTHOR_NAME + " LIKE ?;";
+
+	private static final String SELECT_AUTHOR = "SELECT " + AUTHOR_NAME
+			+ " FROM " + SCHEMA + "." + AUTHOR + " WHERE " + ISBN + "=?;";
 
 	private static final String BRANCH = "branch";
 	private static final String BRANCH_ID = "branch_id";
@@ -91,8 +89,17 @@ public final class DatabaseManager {
 
 	private static final String BOOK_COPIES = "book_copies";
 	private static final String COPIES = "num_of_copies";
+	private static final String AV_COPIES = "available_copies";
 	private static final String INSERT_COPIES = "INSERT INTO " + SCHEMA + "."
-			+ BOOK_COPIES + " VALUES(?, ?, ?);";
+			+ BOOK_COPIES + " VALUES(?, ?, ?, ?);";
+	// private static final String SELECT_COPIES = "SELECT SUM(" + COPIES
+	// + ") FROM " + SCHEMA + "." + BOOK_COPIES + " WHERE " + ISBN + "=?;";
+	private static final String SELECT_BRANCH = "SELECT " + BRANCH_ID + ", "
+			+ COPIES + ", " + AV_COPIES + " FROM " + SCHEMA + "." + BOOK_COPIES
+			+ " WHERE " + ISBN + "=?;";
+	private static final String UPDATE_COPIES = "UPDATE " + SCHEMA + "."
+			+ BOOK_COPIES + " SET " + AV_COPIES + "=? WHERE " + ISBN
+			+ "=? AND " + BRANCH_ID + "=?;";
 
 	private static final String BORROWER = "borrower";
 	private static final String CARD_NO = "card_no";
@@ -103,7 +110,6 @@ public final class DatabaseManager {
 	private static final String PHONE = "phone";
 	private static final String INSERT_BORROWER = "INSERT INTO " + SCHEMA + "."
 			+ BORROWER + " VALUES(?, ?, ?, ?, ?, ?, ?);";
-
 	private static final String SELECT_ALL_BORROWER = "SELECT " + CARD_NO
 			+ ", " + FNAME + ", " + LNAME + " FROM " + SCHEMA + "." + BORROWER;
 
@@ -115,7 +121,6 @@ public final class DatabaseManager {
 			+ BOOK_LOANS + "(" + ISBN + ", " + BRANCH_ID + ", " + CARD_NO
 			+ ", " + DATE_OUT + ", " + DUE_DATE + ", " + DATE_IN
 			+ ") VALUES(?, ?, ?, ?, ?, ?);";
-
 	private static final String SELECT_BORROW_COUNT = "SELECT COUNT(*) FROM "
 			+ SCHEMA + "." + BORROWER + " NATURAL JOIN " + SCHEMA + "."
 			+ BOOK_LOANS + " WHERE " + CARD_NO + "=?;";
@@ -247,6 +252,7 @@ public final class DatabaseManager {
 		ArrayList<Book> books = null;
 		PreparedStatement statement = null;
 		ResultSet rs = null;
+		ResultSet rsAuthor = null;
 		try {
 			if (filter.equalsIgnoreCase(Filter.ALL.getFilter())) {
 				statement = connection.prepareStatement(SELECT_ALL_BOOK);
@@ -266,10 +272,19 @@ public final class DatabaseManager {
 
 			rs = statement.executeQuery();
 			books = new ArrayList<Book>();
+			statement = connection.prepareStatement(SELECT_AUTHOR);
 			while (rs != null && rs.next()) {
+				statement.setString(1, rs.getString(ISBN));
+				rsAuthor = statement.executeQuery();
+				ArrayList<Author> authors = new ArrayList<Author>();
+				while (rsAuthor != null && rsAuthor.next())
+					authors.add(new Author(rsAuthor.getString(AUTHOR_NAME), 0,
+							null));
+
 				books.add(new Book(rs.getString(ISBN), rs.getString(TITLE),
-						null));
+						authors));
 			}
+
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -310,6 +325,7 @@ public final class DatabaseManager {
 			statement.setString(1, book.getId());
 			statement.setInt(2, branch.getId());
 			statement.setInt(3, copies);
+			statement.setInt(4, copies);
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -321,6 +337,76 @@ public final class DatabaseManager {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public void updateAvailableCopies(Book book, Branch branch, int copies) {
+		PreparedStatement statement = null;
+		try {
+			statement = connection.prepareStatement(UPDATE_COPIES);
+			statement.setInt(1, copies);
+			statement.setString(2, book.getId());
+			statement.setInt(3, branch.getId());
+			statement.execute();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/*
+	 * public int getAvailableBookCount(String isbn) { PreparedStatement
+	 * statement = null; ResultSet rs = null; int bookCount = 0; try { statement
+	 * = connection.prepareStatement(SELECT_COPIES); statement.setString(1,
+	 * isbn); rs = statement.executeQuery(); if (rs.next()) bookCount =
+	 * rs.getInt(1); } catch (SQLException e) { e.printStackTrace(); } finally {
+	 * try { if (statement != null) statement.close(); if (rs != null)
+	 * rs.close(); } catch (SQLException e) { e.printStackTrace(); } } return
+	 * bookCount;
+	 * 
+	 * }
+	 */
+
+	public ArrayList<HashMap<Branch, Integer>> getBranchData(Book book) {
+		ArrayList<HashMap<Branch, Integer>> branchesData = null;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = connection.prepareStatement(SELECT_BRANCH);
+			statement.setString(1, book.getId());
+			rs = statement.executeQuery();
+			branchesData = new ArrayList<HashMap<Branch, Integer>>();
+			while (rs != null && rs.next()) {
+				Branch branch = new Branch(rs.getInt(BRANCH_ID));
+				HashMap<Book, Integer> books = new HashMap<Book, Integer>();
+				books.put(book, rs.getInt(COPIES));
+				ArrayList<HashMap<Book, Integer>> booksData = new ArrayList<HashMap<Book, Integer>>();
+				booksData.add(books);
+				branch.setBooks(booksData);
+
+				HashMap<Branch, Integer> branches = new HashMap<Branch, Integer>();
+				branches.put(branch, rs.getInt(AV_COPIES));
+
+				branchesData.add(branches);
+			}
+		} catch (SQLException e) {
+
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+				if (rs != null)
+					rs.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return branchesData;
 	}
 
 	public void insertBorrower(Borrower borrower) {
@@ -374,7 +460,7 @@ public final class DatabaseManager {
 
 	}
 
-	public void insertLoans(Loan loan) {
+	public boolean insertLoans(Loan loan) {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_LOANS);
@@ -389,8 +475,9 @@ public final class DatabaseManager {
 			else
 				statement.setDate(6, null);
 			statement.execute();
+			return true;
 		} catch (SQLException e) {
-			e.printStackTrace();
+			return false;
 		} finally {
 			try {
 				if (statement != null)
@@ -401,6 +488,11 @@ public final class DatabaseManager {
 		}
 	}
 
+	public void checkout(Loan loan, int copies) {
+		insertLoans(loan);
+		updateAvailableCopies(loan.getBook(), loan.getBranch(), copies);
+	}
+
 	public int getBorrowCount(String cardNo) {
 		PreparedStatement statement = null;
 		ResultSet rs = null;
@@ -409,7 +501,7 @@ public final class DatabaseManager {
 			statement = connection.prepareStatement(SELECT_BORROW_COUNT);
 			statement.setString(1, cardNo);
 			rs = statement.executeQuery();
-			if(rs.next())
+			if (rs.next())
 				borrowCount = rs.getInt(1);
 		} catch (SQLException e) {
 			e.printStackTrace();

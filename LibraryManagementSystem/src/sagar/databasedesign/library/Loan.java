@@ -8,6 +8,8 @@ import java.util.Locale;
 import sagar.databasedesign.database.DatabaseManager;
 
 public class Loan {
+	private static final int DAYS = 14;
+	
 	private Book book;
 	private Branch branch;
 	private Borrower borrower;
@@ -19,6 +21,15 @@ public class Loan {
 
 	private static final SimpleDateFormat SDF = new SimpleDateFormat(
 			DATE_PATTERN, Locale.US);
+
+	public Loan(Book book, Branch branch, Borrower borrower) {
+		super();
+		this.book = book;
+		this.branch = branch;
+		this.borrower = borrower;
+		this.dueDate.add(Calendar.DAY_OF_MONTH, DAYS);
+		this.dateIn = null;
+	}
 
 	public Loan(Book book, Branch branch, Borrower borrower, String dateOut,
 			String dueDate, String dateIn) {
@@ -93,5 +104,9 @@ public class Loan {
 
 	public int getBorrowCount(String cardNo) {
 		return DatabaseManager.getInstane().getBorrowCount(cardNo);
+	}
+	
+	public void checkout(int copies) {
+		DatabaseManager.getInstane().checkout(this, copies);
 	}
 }

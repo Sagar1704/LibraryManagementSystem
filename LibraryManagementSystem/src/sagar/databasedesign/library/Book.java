@@ -1,6 +1,7 @@
 package sagar.databasedesign.library;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import sagar.databasedesign.database.DatabaseManager;
 
@@ -92,4 +93,12 @@ public class Book {
 		return DatabaseManager.getInstane().getBooks(query, filter);
 
 	}
+	
+	public ArrayList<HashMap<Branch, Integer>> getBranchData() {
+		return DatabaseManager.getInstane().getBranchData(this);
+	}
+	
+/*	public int getAvailableBookCount(Book book) {
+		return DatabaseManager.getInstane().getAvailableBookCount(book.getId());
+	}*/
 }

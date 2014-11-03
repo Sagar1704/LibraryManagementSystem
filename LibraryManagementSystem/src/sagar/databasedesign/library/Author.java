@@ -41,4 +41,9 @@ public class Author {
 		this.role = role;
 	}
 
+	@Override
+	public String toString() {
+		return name;
+	}
+	
 }

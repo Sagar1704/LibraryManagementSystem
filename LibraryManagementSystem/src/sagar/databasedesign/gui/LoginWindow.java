@@ -8,6 +8,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -22,12 +23,12 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -36,6 +37,7 @@ import javax.swing.table.DefaultTableModel;
 import sagar.databasedesign.enums.Filter;
 import sagar.databasedesign.library.Book;
 import sagar.databasedesign.library.Borrower;
+import sagar.databasedesign.library.Branch;
 import sagar.databasedesign.library.Library;
 import sagar.databasedesign.library.Loan;
 import sagar.databasedesign.library.User;
@@ -64,6 +66,7 @@ public class LoginWindow {
 	private JButton btnCheckout;
 	private JComboBox<String> comboBoxBorrower;
 	private JLabel lblBorrower;
+	private JMenuItem mntmSearch;
 
 	/**
 	 * Launch the application.
@@ -202,40 +205,77 @@ public class LoginWindow {
 		btnCheckout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				int selectedCount = table.getSelectedRowCount();
-				if(selectedCount == 0)
-					JOptionPane.showMessageDialog(frmLogin, "Please select a book");
+				if (selectedCount == 0)
+					JOptionPane.showMessageDialog(frmLogin,
+							"Please select a book");
 				else {
-					int borrowCount = new Loan().getBorrowCount(comboBoxBorrower
-							.getItemAt(comboBoxBorrower.getSelectedIndex()).split(
+					int borrowCount = new Loan()
+							.getBorrowCount(comboBoxBorrower.getItemAt(
+									comboBoxBorrower.getSelectedIndex()).split(
 									"::")[0]);
 					if (borrowCount == Borrower.MAX_BORROW)
-					JOptionPane
-							.showMessageDialog(
-									frmLogin,
-									"Sorry, Cannot Checkout!\n"
-											+ comboBoxBorrower.getItemAt(comboBoxBorrower
-													.getSelectedIndex())
-											+ " has already reached max checkout limit of: "
-											+ Borrower.MAX_BORROW);
-				else if (selectedCount + borrowCount > Borrower.MAX_BORROW)
-					JOptionPane.showMessageDialog(
-							frmLogin,
-							"Sorry, Cannot Checkout!\n"
-									+ comboBoxBorrower
-											.getItemAt(comboBoxBorrower
-													.getSelectedIndex())
-									+ " can only borrow "
-									+ (Borrower.MAX_BORROW - borrowCount)
-									+ " more books.");
-				else {
-					
-				}}
+						JOptionPane
+								.showMessageDialog(
+										frmLogin,
+										"Sorry, Cannot Checkout!\n"
+												+ comboBoxBorrower
+														.getItemAt(comboBoxBorrower
+																.getSelectedIndex())
+												+ " has already reached max checkout limit of: "
+												+ Borrower.MAX_BORROW);
+					else if (selectedCount + borrowCount > Borrower.MAX_BORROW)
+						JOptionPane.showMessageDialog(
+								frmLogin,
+								"Sorry, Cannot Checkout!\n"
+										+ comboBoxBorrower
+												.getItemAt(comboBoxBorrower
+														.getSelectedIndex())
+										+ " can only borrow "
+										+ (Borrower.MAX_BORROW - borrowCount)
+										+ " more books.");
+					else {
+						boolean inStock = true;
+						for (int selection : table.getSelectedRows()) {
+							if (table.getValueAt(selection, 5).toString()
+									.equalsIgnoreCase("0")) {
+								JOptionPane
+										.showMessageDialog(frmLogin,
+												"Sorry, one or more books in your selection are out of stock.");
+								inStock = false;
+								break;
+							}
+						}
+
+						if (inStock) {
+							for (int selection : table.getSelectedRows()) {
+								Loan loan = new Loan(
+										new Book(
+												""
+														+ table.getValueAt(
+																selection, 0)),
+										new Branch(
+												Integer.parseInt(""
+														+ table.getValueAt(
+																selection, 3))),
+										new Borrower(
+												comboBoxBorrower
+														.getItemAt(
+																comboBoxBorrower
+																		.getSelectedIndex())
+														.split("::")[0]));
+								loan.checkout(Integer.parseInt("" + table.getValueAt(selection, 5)) - 1);
+							}
+							JOptionPane.showMessageDialog(frmLogin, "Checked Out");
+							btnSearch.doClick();
+						}
+					}
+				}
 			}
 		});
 		btnCheckout.setBounds(552, 591, 128, 29);
 		panelSearch.add(btnCheckout);
 
-		JMenuItem mntmSearch = new JMenuItem("Search Book");
+		mntmSearch = new JMenuItem("Search Book");
 		mntmSearch.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				panelSearch.setVisible(true);
@@ -264,6 +304,7 @@ public class LoginWindow {
 		JMenuItem mntmCheckout = new JMenuItem("Checkout");
 		mntmCheckout.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				mntmSearch.doClick();
 				btnCheckout.setVisible(true);
 				lblBorrower.setVisible(true);
 				for (Borrower borrower : new Borrower().getBorrowers()) {
@@ -295,13 +336,17 @@ public class LoginWindow {
 		panelSearch.add(comboBoxFilter);
 
 		table = new JTable();
+		table.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		table.setFillsViewportHeight(true);
 		table.setBorder(new LineBorder(new Color(0, 0, 0), 2, true));
 		table.setForeground(new Color(0, 0, 139));
 		table.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+		table.setRowHeight(50);
+		table.setColumnSelectionAllowed(false);
 
 		scrollPaneResults = new JScrollPane();
-		scrollPaneResults.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPaneResults
+				.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPaneResults
 				.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPaneResults.setBounds(215, 100, 808, 475);
@@ -315,7 +360,17 @@ public class LoginWindow {
 				ArrayList<Book> books = new Book().searchBooks(textFieldSearch
 						.getText(), comboBoxFilter.getItemAt(comboBoxFilter
 						.getSelectedIndex()));
-				dtm = new DefaultTableModel(0, 0);
+				dtm = new DefaultTableModel(0, 0) {
+					/**
+					 * 
+					 */
+					private static final long serialVersionUID = 3630094735024498745L;
+
+					@Override
+					public boolean isCellEditable(int row, int column) {
+						return false;
+					}
+				};
 				dtm.addTableModelListener(new TableModelListener() {
 					@Override
 					public void tableChanged(TableModelEvent e) {
@@ -327,18 +382,37 @@ public class LoginWindow {
 				});
 
 				table.setModel(dtm);
-				table.getSelectionModel().addListSelectionListener(
-						new ListSelectionListener() {
-							@Override
-							public void valueChanged(ListSelectionEvent e) {
-							}
-						});
 
-				String[] header = { "ISBN", "Book Title", "Author" };
+				String[] header = { "ISBN", "Book Title", "Author",
+						"Branch ID", "Total Copies", "Available Copies" };
 				dtm.setColumnIdentifiers(header);
 				for (Book book : books) {
-					dtm.addRow(new String[] { book.getId(), book.getTitle(), book.getAuthors().toString() });
+					// boolean first = true;
+					for (HashMap<Branch, Integer> branches : book
+							.getBranchData()) {
+						for (Branch branch : branches.keySet()) {
+							// if (first) {
+							dtm.addRow(new String[] { book.getId(),
+									book.getTitle(),
+									book.getAuthors().toString(),
+									"" + branch.getId(),
+									"" + branch.getBooks().get(0).get(book),
+									"" + branches.get(branch) });
+							// first = false;
+							// } else {
+							// dtm.addRow(new String[] {
+							// "",
+							// "",
+							// "",
+							// "" + branch.getId(),
+							// "" + branch.getBooks().get(0).get(book),
+							// "" + branches.get(branch) });
+							// }
+						}
+					}
+
 				}
+
 			}
 		});
 		btnSearch.setFont(new Font("Segoe UI", Font.BOLD, 18));
