@@ -13,7 +13,7 @@ import sagar.databasedesign.database.DatabaseManager;
 public class Borrower {
 	public static final int MAX_BORROW = 3;
 
-	private String cardNumber;
+	private int cardNumber;
 	private String firstName;
 	private String lastName;
 	private String address;
@@ -21,12 +21,12 @@ public class Borrower {
 	private String state;
 	private String phone;
 
-	public Borrower(String cardNumber) {
+	public Borrower(int cardNumber) {
 		super();
 		this.cardNumber = cardNumber;
 	}
 
-	public Borrower(String cardNumber, String firstName, String lastName,
+	public Borrower(int cardNumber, String firstName, String lastName,
 			String address, String city, String state, String phone) {
 		super();
 		this.cardNumber = cardNumber;
@@ -41,11 +41,11 @@ public class Borrower {
 	public Borrower() {
 	}
 
-	public String getCardNumber() {
+	public int getCardNumber() {
 		return cardNumber;
 	}
 
-	public void setCardNumber(String cardNumber) {
+	public void setCardNumber(int cardNumber) {
 		this.cardNumber = cardNumber;
 	}
 
@@ -100,4 +100,52 @@ public class Borrower {
 	public ArrayList<Borrower> getBorrowers() {
 		return DatabaseManager.getInstane().getBorrowers();
 	}
+	
+	public int getMaxCardNo() {
+		return DatabaseManager.getInstane().getMaxCardNo();
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((address == null) ? 0 : address.hashCode());
+		result = prime * result
+				+ ((firstName == null) ? 0 : firstName.hashCode());
+		result = prime * result
+				+ ((lastName == null) ? 0 : lastName.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Borrower other = (Borrower) obj;
+		if (address == null) {
+			if (other.address != null)
+				return false;
+		} else if (!address.equals(other.address))
+			return false;
+		if (firstName == null) {
+			if (other.firstName != null)
+				return false;
+		} else if (!firstName.equals(other.firstName))
+			return false;
+		if (lastName == null) {
+			if (other.lastName != null)
+				return false;
+		} else if (!lastName.equals(other.lastName))
+			return false;
+		return true;
+	}
+	
+	public void insertBorrower() {
+		DatabaseManager.getInstane().insertBorrower(this);
+	}
+	
 }

@@ -100,8 +100,8 @@ public final class DatabaseManager {
 			+ COPIES + ", " + AV_COPIES + " FROM " + SCHEMA + "." + BOOK_COPIES
 			+ " WHERE " + ISBN + "=?;";
 	private static final String SELECT_AV_COPIES = "SELECT " + AV_COPIES
-			+ " FROM " + SCHEMA + "." + BOOK_COPIES
-			+ " WHERE " + ISBN + "=? AND " + BRANCH_ID + "=?;";
+			+ " FROM " + SCHEMA + "." + BOOK_COPIES + " WHERE " + ISBN
+			+ "=? AND " + BRANCH_ID + "=?;";
 	private static final String UPDATE_COPIES = "UPDATE " + SCHEMA + "."
 			+ BOOK_COPIES + " SET " + AV_COPIES + "=? WHERE " + ISBN
 			+ "=? AND " + BRANCH_ID + "=?;";
@@ -116,10 +116,12 @@ public final class DatabaseManager {
 	private static final String INSERT_BORROWER = "INSERT INTO " + SCHEMA + "."
 			+ BORROWER + " VALUES(?, ?, ?, ?, ?, ?, ?);";
 	private static final String SELECT_ALL_BORROWER = "SELECT " + CARD_NO
-			+ ", " + FNAME + ", " + LNAME + " FROM " + SCHEMA + "." + BORROWER;
+			+ ", " + FNAME + ", " + LNAME + ", " + ADDRESS + " FROM " + SCHEMA + "." + BORROWER;
 	private static final String SELECT_CARD_BORROWER = "SELECT " + CARD_NO
 			+ ", " + FNAME + ", " + LNAME + " FROM " + SCHEMA + "." + BORROWER
 			+ " WHERE " + CARD_NO + "=?";
+	private static final String SELECT_MAX_BORROWER = "SELECT MAX(" + CARD_NO
+			+ ") FROM " + SCHEMA + "." + BORROWER;
 
 	private static final String BOOK_LOANS = "book_loans";
 	private static final String DATE_OUT = "date_out";
@@ -143,8 +145,9 @@ public final class DatabaseManager {
 	private static final String UPDATE_LOANS = "UPDATE " + SCHEMA + "."
 			+ BOOK_LOANS + " SET " + DATE_IN + "=? WHERE " + ISBN + "=? AND "
 			+ BRANCH_ID + "=? AND " + CARD_NO + "=?;";
-	private static final String SELECT_DATE_OUT = "SELECT " + DATE_OUT + " FROM " + SCHEMA
-			+ "." + BOOK_LOANS + " WHERE " + ISBN + "=? AND " + BRANCH_ID + "=? AND " + CARD_NO + "=?;";
+	private static final String SELECT_DATE_OUT = "SELECT " + DATE_OUT
+			+ " FROM " + SCHEMA + "." + BOOK_LOANS + " WHERE " + ISBN
+			+ "=? AND " + BRANCH_ID + "=? AND " + CARD_NO + "=?;";
 
 	private static final String FINES = "FINES";
 	private static final String LOAN_ID = "loan_id";
@@ -428,7 +431,7 @@ public final class DatabaseManager {
 			statement.setString(1, book.getId());
 			statement.setInt(2, branch.getId());
 			rs = statement.executeQuery();
-			if(rs != null && rs.next())
+			if (rs != null && rs.next())
 				availableCopies = rs.getInt(AV_COPIES);
 		} catch (SQLException e) {
 
@@ -442,9 +445,9 @@ public final class DatabaseManager {
 				e.printStackTrace();
 			}
 		}
-return availableCopies;
+		return availableCopies;
 	}
-	
+
 	public ArrayList<HashMap<Branch, Integer>> getBranchData(Book book) {
 		ArrayList<HashMap<Branch, Integer>> branchesData = null;
 		PreparedStatement statement = null;
@@ -486,7 +489,7 @@ return availableCopies;
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_BORROWER);
-			statement.setString(1, borrower.getCardNumber());
+			statement.setInt(1, borrower.getCardNumber());
 			statement.setString(2, borrower.getFirstName());
 			statement.setString(3, borrower.getLastName());
 			statement.setString(4, borrower.getAddress());
@@ -515,8 +518,8 @@ return availableCopies;
 			rs = statement.executeQuery();
 			borrowers = new ArrayList<Borrower>();
 			while (rs != null && rs.next()) {
-				borrowers.add(new Borrower(rs.getString(CARD_NO), rs
-						.getString(FNAME), rs.getString(LNAME), null, null,
+				borrowers.add(new Borrower(rs.getInt(CARD_NO), rs
+						.getString(FNAME), rs.getString(LNAME), rs.getString(ADDRESS), null,
 						null, null));
 			}
 		} catch (SQLException e) {
@@ -542,7 +545,7 @@ return availableCopies;
 			statement.setString(1, cardNo);
 			rs = statement.executeQuery();
 			while (rs != null && rs.next()) {
-				borrower = new Borrower(rs.getString(CARD_NO),
+				borrower = new Borrower(rs.getInt(CARD_NO),
 						rs.getString(FNAME), rs.getString(LNAME), null, null,
 						null, null);
 			}
@@ -560,13 +563,36 @@ return availableCopies;
 
 	}
 
+	public int getMaxCardNo() {
+		int max = 0;
+		PreparedStatement statement = null;
+		ResultSet rs = null;
+		try {
+			statement = connection.prepareStatement(SELECT_MAX_BORROWER);
+			rs = statement.executeQuery();
+			if (rs != null && rs.next()) {
+				max = rs.getInt(1);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (statement != null)
+					statement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+		return max;
+	}
+
 	public boolean insertLoans(Loan loan) {
 		PreparedStatement statement = null;
 		try {
 			statement = connection.prepareStatement(INSERT_LOANS);
 			statement.setString(1, loan.getBook().getId());
 			statement.setInt(2, loan.getBranch().getId());
-			statement.setString(3, loan.getBorrower().getCardNumber());
+			statement.setInt(3, loan.getBorrower().getCardNumber());
 			statement.setDate(4, new Date(loan.getDateOut().getTimeInMillis()));
 			statement.setDate(5, new Date(loan.getDueDate().getTimeInMillis()));
 			if (loan.getDateIn() != null)
@@ -628,7 +654,7 @@ return availableCopies;
 		ResultSet rsBook = null;
 		try {
 			statement = connection.prepareStatement(SELECT_CARD_LOAN);
-			statement.setString(1, borrower.getCardNumber());
+			statement.setInt(1, borrower.getCardNumber());
 			rs = statement.executeQuery();
 			loans = new ArrayList<Loan>();
 
@@ -670,7 +696,7 @@ return availableCopies;
 			statement.setDate(1, dateIn);
 			statement.setString(2, book.getId());
 			statement.setInt(3, branch.getId());
-			statement.setString(4, borrower.getCardNumber());
+			statement.setInt(4, borrower.getCardNumber());
 			statement.execute();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -698,7 +724,7 @@ return availableCopies;
 			statement = connection.prepareStatement(SELECT_DATE_OUT);
 			statement.setString(1, loan.getBook().getId());
 			statement.setInt(2, loan.getBranch().getId());
-			statement.setString(3, loan.getBorrower().getCardNumber());
+			statement.setInt(3, loan.getBorrower().getCardNumber());
 			rs = statement.executeQuery();
 			if (rs.next())
 				dateOut = rs.getDate(DATE_OUT);
@@ -716,7 +742,7 @@ return availableCopies;
 		}
 		return dateOut;
 	}
-	
+
 	public int getBorrowCount(String cardNo) {
 		PreparedStatement statement = null;
 		ResultSet rs = null;

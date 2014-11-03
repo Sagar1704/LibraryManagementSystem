@@ -1,9 +1,6 @@
 package sagar.databasedesign.library;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -291,10 +288,11 @@ public class Library {
 				while (scanner.hasNextLine()) {
 					String borrower = scanner.nextLine();
 					String[] borrowerElement = borrower.split("\t");
-					borrowers.add(new Borrower(borrowerElement[0],
-							borrowerElement[1], borrowerElement[2],
-							borrowerElement[3], borrowerElement[4],
-							borrowerElement[5], borrowerElement[6]));
+					borrowers.add(new Borrower(Integer
+							.parseInt(borrowerElement[0]), borrowerElement[1],
+							borrowerElement[2], borrowerElement[3],
+							borrowerElement[4], borrowerElement[5],
+							borrowerElement[6]));
 				}
 			} else
 				throw new FileEmptyException(
@@ -323,8 +321,9 @@ public class Library {
 					String[] loanElement = loan.split("\t");
 					loans.add(new Loan(new Book(loanElement[1]), new Branch(
 							Integer.parseInt(loanElement[2])), new Borrower(
-							loanElement[3]), loanElement[4], loanElement[5],
-							loanElement[6].equalsIgnoreCase("NULL") ? null
+							Integer.parseInt(loanElement[3])), loanElement[4],
+							loanElement[5], loanElement[6]
+									.equalsIgnoreCase("NULL") ? null
 									: loanElement[6]));
 				}
 			} else
